@@ -121,6 +121,8 @@ SECTIONS
         *(.text.*8opendm403dmm11load_record*);
         *(.text.*8opendm403dmm10rec_crc_ok*);
         *(.text.*8opendm406native*);
+        *(.text.*8opendm409bootimage*);
+        *(.text.*8opendm406vwrite9save_boot*);
         *(.text.*8opendm403uid4init*);
         *(.text.*8opendm407gallery*);
         *(.text.*8opendm4010screenshot*);

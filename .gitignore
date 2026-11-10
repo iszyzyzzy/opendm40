@@ -14,6 +14,7 @@ stock/patch/build*/
 __pycache__/
 firmware/target/
 /toolchain
+/tmp/
 
 # Personal device data: flash / OTP / option-byte dumps, calibration, chip UID,
 # SPI disk backups (the `*.bin` rule is case-sensitive and misses CONFIG.BIN,

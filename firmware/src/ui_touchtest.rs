@@ -107,18 +107,18 @@ pub fn page() {
     // Legend: raw dot, debounced dot, down cross.
     let ly = LEGEND_Y + 10;
     shape(LINE_X + 2, ly - 2, 5, 5, C_RAW);
-    sf::glyphs(sf::TEXT22, rect(LINE_X + 12, LEGEND_Y, 44, 20), "raw", STATUS_FG, M_BG, 1, 0);
+    sf::glyphs(sf::TEXT22, rect(LINE_X + 12, LEGEND_Y, 44, 20), "原始", STATUS_FG, M_BG, 1, 0);
     shape(LINE_X + 65, ly - 1, 3, 3, C_DEB);
-    sf::glyphs(sf::TEXT22, rect(LINE_X + 74, LEGEND_Y, 100, 20), "corrected", STATUS_FG, M_BG, 1, 0);
+    sf::glyphs(sf::TEXT22, rect(LINE_X + 74, LEGEND_Y, 100, 20), "校正", STATUS_FG, M_BG, 1, 0);
     #[cfg(test)]
     crate::probe::begin(crate::probe::SHAPE, M_BG);
     cross_at(LINE_X + 191, ly);
     #[cfg(test)]
     crate::probe::end();
-    sf::glyphs(sf::TEXT22, rect(LINE_X + 203, LEGEND_Y, 60, 20), "down", STATUS_FG, M_BG, 1, 0);
+    sf::glyphs(sf::TEXT22, rect(LINE_X + 203, LEGEND_Y, 60, 20), "按下", STATUS_FG, M_BG, 1, 0);
     hint(false);
-    button(CALIB, "Calibrate");
-    button(CLEAR, "Clear");
+    button(CALIB, "校准");
+    button(CLEAR, "清除");
 }
 
 /// A button box with its centred text.
@@ -196,10 +196,10 @@ fn w_line(i: usize, text: &str, c: Color) {
 pub fn cal_page() {
     lcd::fill_rect(0, 0, lcd::W, lcd::H, M_BG);
     targets();
-    w_line(0, "Touch calibration", M_ACCENT);
-    w_line(1, "Tap the yellow cross", STATUS_FG);
-    button(BTN[0], "Cancel");
-    button(BTN[1], "Reset");
+    w_line(0, "触摸校准", M_ACCENT);
+    w_line(1, "点击黄色十字", STATUS_FG);
+    button(BTN[0], "取消");
+    button(BTN[1], "重置");
 }
 
 /// The walk's step line: target `i` (0-based) of 9, tap `tap` (0-based) of
@@ -207,7 +207,7 @@ pub fn cal_page() {
 #[inline(never)]
 pub fn cal_step(i: usize, tap: u8, taps: u8) {
     let mut t = Txt::new();
-    t.s("Point ").u(i as u32 + 1).s(" of ").u(TARGETS.len() as u32).s(", tap ").u(tap as u32 + 1).s(" of ").u(taps as u32);
+    t.s("校准点 ").u(i as u32 + 1).s(" / ").u(TARGETS.len() as u32).s("，点按 ").u(tap as u32 + 1).s(" / ").u(taps as u32);
     w_line(2, t.as_str(), STATUS_FG);
 }
 
@@ -226,10 +226,10 @@ pub fn result_page(mean: u32, max: u32, before: u32, k: &[f32; 6], bad: Option<&
     lcd::fill_rect(0, 0, lcd::W, lcd::H, M_BG);
     targets();
     let mut t = Txt::new();
-    t.s("Fit error: mean ").d(mean).s(", max ").d(max).s(" px");
+    t.s("拟合误差 均值 ").d(mean).s(" 最大 ").d(max).s(" px");
     w_line(0, t.as_str(), STATUS_FG);
     let mut t = Txt::new();
-    t.s("Before: mean ").d(before).s(" px");
+    t.s("校准前 均值 ").d(before).s(" px");
     w_line(1, t.as_str(), STATUS_FG);
     let mut t = Txt::new();
     eq(&mut t, "x' = ", &k[0..3], true);
@@ -238,11 +238,11 @@ pub fn result_page(mean: u32, max: u32, before: u32, k: &[f32; 6], bad: Option<&
     eq(&mut t, "y' = ", &k[3..6], true);
     w_line(3, t.as_str(), STATUS_FG);
     match bad {
-        None => cal_msg("Good fit: Save applies it", false),
+        None => cal_msg("拟合良好，保存后生效", false),
         Some(why) => cal_msg(why, true),
     }
-    button(BTN[0], if bad.is_none() { "Save" } else { "Try again" });
-    button(BTN[1], "Cancel");
+    button(BTN[0], if bad.is_none() { "保存" } else { "重试" });
+    button(BTN[1], "取消");
 }
 
 /// Which of BTN (0, 1) holds (x, y).
@@ -262,7 +262,7 @@ fn in_rect(r: &sf::Rect, x: u16, y: u16) -> bool {
 /// The exit hint; `holding`: a long press is under way (it exits at 2 s).
 #[inline(never)]
 pub fn hint(holding: bool) {
-    let (a, c) = if holding { ("Keep holding to exit", C_DOWN) } else { ("Exit: power key, hold 2 s", M_ACCENT) };
+    let (a, c) = if holding { ("继续按住即退出", C_DOWN) } else { ("退出：长按电源键 2 秒", M_ACCENT) };
     sf::label(sf::TEXT22, HINT, a, c, M_BG, 1, 0);
 }
 

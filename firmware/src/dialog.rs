@@ -47,18 +47,18 @@ pub const TOAST_MS: u64 = 1500;
 /// (the wiring dialog / the firmware question: 60 s).
 pub const ENERGY_MS: u64 = 60_000;
 /// The low-battery warning (stock text and time; lowbat.rs).
-pub const LOW_BATTERY: &str = "Low battery! Please charge";
+pub const LOW_BATTERY: &str = "电量低，请充电";
 pub const LOW_BATTERY_MS: u64 = 3000;
 /// The countdown before the power-off on an empty battery (lowbat.rs).
 pub fn low_battery_off(secs: u8) -> &'static str {
     match secs {
-        30 => "Battery empty: off in 30 s",
-        20 => "Battery empty: off in 20 s",
-        _ => "Battery empty: off in 10 s",
+        30 => "电量耗尽，30 秒后关机",
+        20 => "电量耗尽，20 秒后关机",
+        _ => "电量耗尽，10 秒后关机",
     }
 }
 /// Scope AUTO-set fell back from AC to DC coupling (UF-04, app.rs autoset).
-pub const AUTO_DC: &str = "AUTO: DC (no AC signal)";
+pub const AUTO_DC: &str = "自动: 直流 (无交流信号)";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Overlay {
@@ -133,34 +133,34 @@ fn button(r: (u16, u16, u16, u16), label: &str, bg: Color) {
 /// Draw the power-off confirm.
 pub fn power_off() {
     let b = BOX;
-    centred((b.0, b.1, b.2, 40), "Power off?", FG, TITLE_BG);
-    centred((b.0, b.1 + 40, b.2, 60), "Cancels in 3 s", FG, BODY_BG);
+    centred((b.0, b.1, b.2, 40), "关机？", FG, TITLE_BG);
+    centred((b.0, b.1 + 40, b.2, 60), "3 秒后取消", FG, BODY_BG);
     lcd::fill_rect(b.0, b.1 + 100, b.2, b.3 - 100, BODY_BG);
     frame(b, FRAME);
-    button(NO, "No", BTN);
-    button(YES, "Yes", BTN_RED);
+    button(NO, "否", BTN);
+    button(YES, "是", BTN_RED);
 }
 
 /// Draw the energy reset confirm (power meter: a long press on the energy
 /// readout / the side column); hit test = `power_off_hit`.
 pub fn energy_reset() {
     let b = BOX;
-    centred((b.0, b.1, b.2, 40), "Reset energy?", FG, TITLE_BG);
-    centred((b.0, b.1 + 40, b.2, 60), "Wh, VAh and the time", FG, BODY_BG);
+    centred((b.0, b.1, b.2, 40), "重置电量？", FG, TITLE_BG);
+    centred((b.0, b.1 + 40, b.2, 60), "电量及累计时间", FG, BODY_BG);
     lcd::fill_rect(b.0, b.1 + 100, b.2, b.3 - 100, BODY_BG);
     frame(b, FRAME);
-    button(NO, "No", BTN);
-    button(YES, "Yes", BTN_RED);
+    button(NO, "否", BTN);
+    button(YES, "是", BTN_RED);
 }
 
 /// The firmware install question (vwrite.rs: a valid update file copied
 /// onto the USB disk is staged as DM40FW.BIN); hit test = `power_off_hit`.
-pub const FW_TITLE: &str = "Firmware received";
-pub const FW_BODY: &str = "Install it now?";
+pub const FW_TITLE: &str = "固件已接收";
+pub const FW_BODY: &str = "现在安装？";
 /// Auto-answer No, ms.
 pub const FW_MS: u64 = 60_000;
 /// The toast for a DM40*.BIN that is no valid update file.
-pub const FW_BAD: &str = "Not a DM40 update file";
+pub const FW_BAD: &str = "不是 DM40 升级文件";
 
 pub fn fw_install() {
     let b = BOX;
@@ -168,8 +168,8 @@ pub fn fw_install() {
     centred((b.0, b.1 + 40, b.2, 60), FW_BODY, FG, BODY_BG);
     lcd::fill_rect(b.0, b.1 + 100, b.2, b.3 - 100, BODY_BG);
     frame(b, FRAME);
-    button(NO, "No", BTN);
-    button(YES, "Yes", BTN_RED);
+    button(NO, "否", BTN);
+    button(YES, "是", BTN_RED);
 }
 
 /// Power-off confirm hit test: Some(true) = Yes, Some(false) = No, None =
@@ -452,7 +452,7 @@ pub fn log_panel(now: u64, info: LogInfo) {
     let mut t = [0u8; 32];
     match st.part {
         // Letter spacing 2 as the toasts (ASCII26 glyphs touch at 0).
-        0 => centred_sp((b.0, b.1, b.2, 38), "DATA LOGGING", FG, ERR_BG, 2),
+        0 => centred_sp((b.0, b.1, b.2, 38), "正在记录", FG, ERR_BG, 2),
         p @ 1..=3 => {
             let k = log_panel_text(&info, p as usize - 1, &mut t);
             let fg = if p == 3 && info.lost == 0 { FRAME } else { FG };

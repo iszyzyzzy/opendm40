@@ -187,7 +187,7 @@ const LOOP_CAP: &str = "4-20mA";
 
 /// Caption of the burden voltage readout (A functions, Settings > Multimeter
 /// "Burden voltage"; doc 3.15): DC A aux1, AC A aux2.
-const BURDEN_CAP: &str = "Burden";
+const BURDEN_CAP: &str = "负担电压";
 /// An aux row's F14 caption and LETTERS value in the boxes cx..te, te..end
 /// (they tile cx..end): the value right-aligned, the caption right-aligned
 /// 6 px before the value's ink, so it hugs a short value as a long one
@@ -1130,7 +1130,7 @@ impl DmmView {
                         // power meter's V / I are OL only with it): two
                         // boxes tiling the plain one, so a value after it
                         // leaves nothing behind.
-                        sf::label(sf::F14, rect(vx - 30, 36, 81, 30), "Overflow", vcol, BG, 4, 1);
+                        sf::label(sf::F14, rect(vx - 30, 36, 81, 30), "溢出", vcol, BG, 4, 1);
                         sf::label(sf::LETTERS, rect(vx + 51, 36, 56, 30), txt, vcol, BG, 4, 0);
                     } else {
                         sf::label(sf::LETTERS, rect(vx - 30, 36, 137, 30), txt, vcol, BG, 4, 0);
@@ -1256,7 +1256,7 @@ const OL_WORD: sf::Rect = rect(312, VALUE_BASE as i16 - 22, 86, 22);
 /// stream runs (V / A functions).
 #[inline(never)] // drawn on entering OL only
 fn ol_word(r: sf::Rect, c: Color) {
-    sf::label(sf::F14, r, "Overflow", c, BG, 2, 1);
+    sf::label(sf::F14, r, "溢出", c, BG, 2, 1);
 }
 
 /// The test current label's box: the aux1 slot's left part (the burden
@@ -1272,7 +1272,7 @@ const CAP_DIS_RECT: sf::Rect = rect(8, 36, 223, 30);
 /// there), else only the value part.
 #[inline(never)] // .cold (link-native.x): during a discharge only
 pub fn cap_discharge_label(v: f32, clamp: bool, full: bool) {
-    const PRE: &str = "Discharging...";
+    const PRE: &str = "正在放电...";
     let b = CAP_DIS_RECT;
     // (The value from a word space after the prefix.)
     let w = sf::text_width(sf::F14, PRE, 1) + 10;
@@ -1298,7 +1298,7 @@ pub fn cap_discharge_label(v: f32, clamp: bool, full: bool) {
 pub fn cap_noise_label() {
     let b = CAP_DIS_RECT;
     lcd::fill_rect(b.x as u16, b.y as u16, b.w as u16, b.h as u16, BG);
-    sf::label(sf::F14, b, "Unstable: unplug USB?", DIM, BG, 1, 1);
+    sf::label(sf::F14, b, "不稳定，请拔掉 USB", DIM, BG, 1, 1);
 }
 
 /// "I 0.90 mA": the test current of `mode` (dmm::test_current): ohm, the
@@ -1413,7 +1413,7 @@ pub fn strip_data(r: &Reading, hold: u8, lim: u8, rel: bool, hv: u8, alt: bool, 
     // "0L": what it means, in the first free sub row (else the second:
     // the reading matters more than its sub values then).
     if r.main.ol {
-        d.sub[if d.sub[0].as_str().is_empty() { 0 } else { 1 }] = Txt::new("Overflow");
+        d.sub[if d.sub[0].as_str().is_empty() { 0 } else { 1 }] = Txt::new("溢出");
     }
     let verdict = match lim {
         meter::V_PASS => Some(("PASS", 0x0400)),
@@ -1646,10 +1646,10 @@ fn cpl_rect(i: usize) -> sf::Rect {
 #[inline(never)] // .cold (link-native.x): the MF page, drawn on a tap
 pub fn range_page(b: Button, sel: Option<usize>, sub: u8, note: Option<(&str, bool)>) {
     let title = match b {
-        Button::Volt => "Voltage Settings",
-        Button::Amp => "Current Settings",
-        Button::Ohm => "Resistor Settings",
-        _ => "Capacitance Settings",
+        Button::Volt => "电压设置",
+        Button::Amp => "电流设置",
+        Button::Ohm => "电阻设置",
+        _ => "电容设置",
     };
     lcd::fill_rect(0, 0, lcd::W, 40, 0x2966);
     lcd::fill_rect(0, 40, lcd::W, lcd::H - 40, BG);
@@ -1695,7 +1695,7 @@ pub fn range_page(b: Button, sel: Option<usize>, sub: u8, note: Option<(&str, bo
         // view's "Wave" in ad2-isr builds).
         let r = FUSE_BTN;
         sf::rbox(r, 6, 0x2966, BG);
-        sf::glyphs(sf::TEXT22, r, "Fuse check", STATUS_FG, 0x2966, 8, 0);
+        sf::glyphs(sf::TEXT22, r, "保险丝自检", STATUS_FG, 0x2966, 8, 0);
     }
 }
 
@@ -1706,7 +1706,7 @@ pub const INRUSH_BTN: sf::Rect = rect(319, 141, 150, 36);
 
 pub fn inrush_button() {
     sf::rbox(INRUSH_BTN, 6, 0x2966, BG);
-    sf::glyphs(sf::TEXT22, INRUSH_BTN, "Inrush", STATUS_FG, 0x2966, 8, 0);
+    sf::glyphs(sf::TEXT22, INRUSH_BTN, "涌流", STATUS_FG, 0x2966, 8, 0);
 }
 
 /// The Inrush button was hit (the gaps to its neighbours split as theirs).
@@ -1734,12 +1734,12 @@ pub fn fuse_screen(stage: u8, res: crate::sentinel::FuseRes, buf: &mut [u8; 32])
         _ => "",
     };
     match (stage, res) {
-        (0, _) => crate::dialog::fuse_check("Fuse check", crate::dialog::TITLE_BG, "Lead from V/ohm jack to A", "nothing else connected", Some("Cancel"), Some("Start")),
-        (1, _) | (_, F::Busy | F::Idle) => crate::dialog::fuse_check("Fuse check", crate::dialog::TITLE_BG, "Measuring ...", "expect ~48 \u{3a9}", Some("Cancel"), None),
-        (_, F::Ok(_)) => crate::dialog::fuse_check("Fuse OK", crate::dialog::FUSE_OK_BG, ohm, "A input path intact", Some("Again"), Some("OK")),
-        (_, F::Open) => crate::dialog::fuse_check("Fuse open", crate::dialog::FUSE_BAD_BG, "OL: no path from V to A", "Replace: 10 A ceramic fuse", Some("Again"), Some("OK")),
-        (_, F::Odd(_)) => crate::dialog::fuse_check("Check leads", crate::dialog::FUSE_ODD_BG, ohm, "One lead V/ohm to A only", Some("Again"), Some("OK")),
-        (_, F::NoReading) => crate::dialog::fuse_check("Check leads", crate::dialog::FUSE_ODD_BG, "No ohm reading", "One lead V/ohm to A only", Some("Again"), Some("OK")),
+        (0, _) => crate::dialog::fuse_check("保险丝自检", crate::dialog::TITLE_BG, "表笔从 V/Ω 插孔接到 A", "其他不要接", Some("取消"), Some("开始")),
+        (1, _) | (_, F::Busy | F::Idle) => crate::dialog::fuse_check("保险丝自检", crate::dialog::TITLE_BG, "测量中 ...", "expect ~48 \u{3a9}", Some("取消"), None),
+        (_, F::Ok(_)) => crate::dialog::fuse_check("保险丝正常", crate::dialog::FUSE_OK_BG, ohm, "A 通道完好", Some("再次"), Some("确定")),
+        (_, F::Open) => crate::dialog::fuse_check("保险丝断开", crate::dialog::FUSE_BAD_BG, "OL: V 到 A 不通", "更换 10A 陶瓷保险丝", Some("再次"), Some("确定")),
+        (_, F::Odd(_)) => crate::dialog::fuse_check("检查表笔", crate::dialog::FUSE_ODD_BG, ohm, "只用一根表笔接 A", Some("再次"), Some("确定")),
+        (_, F::NoReading) => crate::dialog::fuse_check("检查表笔", crate::dialog::FUSE_ODD_BG, "无电阻读数", "只用一根表笔接 A", Some("再次"), Some("确定")),
     }
 }
 
@@ -1774,7 +1774,7 @@ fn bottom_col(x: u16, y: u16) -> Option<usize> {
 /// `record_button`.
 #[inline(never)]
 fn ok_and_limits_buttons() {
-    for (c, t) in [(0, "Limits"), (3, "OK")] {
+    for (c, t) in [(0, "限值"), (3, "确定")] {
         let r = bottom_rect(c);
         sf::rbox(r, 6, 0x2966, BG);
         sf::glyphs(sf::TEXT22, r, t, STATUS_FG, 0x2966, 8, 0);
@@ -1803,7 +1803,7 @@ pub fn record_button(r: sf::Rect, pressed: bool) {
         0x2966
     };
     sf::rbox(r, 6, c, BG);
-    sf::glyphs(sf::TEXT22, r, "Record", STATUS_FG, c, 8, 0);
+    sf::glyphs(sf::TEXT22, r, "记录", STATUS_FG, c, 8, 0);
 }
 
 /// "Wave" on the V / A range pages (the DMM wave view, app_wave.rs; builds
@@ -1817,7 +1817,7 @@ pub const FUSE_BTN: sf::Rect = rect(162, 141, 150, 36);
 
 pub fn wave_button() {
     sf::rbox(WAVE_BTN, 6, 0x2966, BG);
-    sf::glyphs(sf::TEXT22, WAVE_BTN, "Wave", STATUS_FG, 0x2966, 8, 0);
+    sf::glyphs(sf::TEXT22, WAVE_BTN, "波形", STATUS_FG, 0x2966, 8, 0);
 }
 
 /// The Wave button was hit (the gaps to its neighbours split as theirs).
@@ -1828,7 +1828,7 @@ pub fn wave_hit(x: u16, y: u16) -> bool {
 /// Ohm variant buttons of the Resistor Settings page (Dmm::ohm_var 0 / 1).
 /// Labelled with the variant's short-circuit test current on the 600 ohm
 /// range (dmm::OHM_ISC r1, measured); "ON" = the button's stock tag.
-pub const OHM_VARS: [&str; 2] = ["0.90 mA", "0.28 mA ON"];
+pub const OHM_VARS: [&str; 2] = ["0.90 mA", "0.28 mA 开"];
 
 /// `range_press` targets besides the range items (0..): RP_ERR + the Err
 /// code of `range_hit`, the Wave and Inrush buttons.
@@ -1858,8 +1858,8 @@ pub fn range_press_rect(b: Button, t: u8, sel: Option<usize>, sub: u8) -> Option
 fn range_press_item(b: Button, t: u8, sel: Option<usize>, sub: u8) -> Option<(sf::Rect, Option<(&'static str, bool)>)> {
     let items = range_items(b);
     let (r, name, selected) = match t {
-        RP_WAVE => (WAVE_BTN, "Wave", false),
-        RP_INRUSH => (INRUSH_BTN, "Inrush", false),
+        RP_WAVE => (WAVE_BTN, "波形", false),
+        RP_INRUSH => (INRUSH_BTN, "涌流", false),
         i if (i as usize) < items.len() => (range_rect(i as usize), items[i as usize].0, sel == Some(i as usize)),
         RP_ERR.. => match (t - RP_ERR, b) {
             (k @ 0..=1, Button::Ohm) => (rect([8, 244][k as usize], 182, 228, 38), OHM_VARS[k as usize], k == sub),
@@ -1871,10 +1871,10 @@ fn range_press_item(b: Button, t: u8, sel: Option<usize>, sub: u8) -> Option<(sf
                 };
                 (cpl_rect(i as usize), CPL_NAMES[i as usize], i == sub)
             }
-            (2, _) => (bottom_rect(3), "OK", false),
-            (4, _) => (bottom_rect(0), "Limits", false),
+            (2, _) => (bottom_rect(3), "确定", false),
+            (4, _) => (bottom_rect(0), "限值", false),
             (7, _) => return Some((bottom_rect(1), None)),
-            (5, Button::Amp) => (FUSE_BTN, "Fuse check", false),
+            (5, Button::Amp) => (FUSE_BTN, "保险丝自检", false),
             _ => return None,
         },
         _ => return None,
@@ -1916,9 +1916,9 @@ pub fn range_hit(b: Button, sel: Option<usize>, x: u16, y: u16) -> Option<Result
 }
 
 /// Temperature sensor names on screen (dmm.rs T_NAMES order).
-pub const T_LABELS: [&str; 7] = ["TC K", "PT100", "PT1000", "NTC10k B3950", "NTC10k B3435", "NTC100k B3950", "NTC user"];
+pub const T_LABELS: [&str; 7] = ["K热电偶", "PT100", "PT1000", "NTC10k B3950", "NTC10k B3435", "NTC100k B3950", "NTC自定义"];
 /// Sensor buttons of the temperature page (dmm.rs T_NAMES order).
-const T_KEYS: [&str; 7] = ["TC K", "PT100", "PT1000", "10k 3950", "10k 3435", "100k 3950", "NTC user"];
+const T_KEYS: [&str; 7] = ["K热电偶", "PT100", "PT1000", "10k 3950", "10k 3435", "100k 3950", "NTC自定义"];
 
 /// Temperature page (MF on the temperature function), redesigned 2026-10-21
 /// (owner: the "Offset 0" key was unclear, the offset slider unintuitive,
@@ -2010,8 +2010,8 @@ pub fn temp_key(p: &TempPage, code: u8, pressed: bool) {
             let v = crate::dmm::format(&mut t, p.beta, 0);
             join(&mut b, &["Beta  ", v, " K"])
         }
-        TK_LIMITS => "Limits",
-        _ => "OK",
+        TK_LIMITS => "限值",
+        _ => "确定",
     };
     if code == TK_OFFS {
         // The value field: darker than the keys, the value in orange.
@@ -2027,14 +2027,14 @@ pub fn temp_key(p: &TempPage, code: u8, pressed: bool) {
 pub fn temp_page(p: &TempPage) {
     lcd::fill_rect(0, 0, lcd::W, 40, 0x2966);
     lcd::fill_rect(0, 40, lcd::W, lcd::H - 40, BG);
-    sf::glyphs(sf::TEXT22, rect(0, 0, 480, 40), "Temperature Settings", STATUS_FG, 0x2966, 8, 0);
-    sf::glyphs(sf::TEXT22, rect(8, T_ROW_Y, 118, T_ROW_H), "Offset", STATUS_FG, BG, 1, 0);
+    sf::glyphs(sf::TEXT22, rect(0, 0, 480, 40), "温度设置", STATUS_FG, 0x2966, 8, 0);
+    sf::glyphs(sf::TEXT22, rect(8, T_ROW_Y, 118, T_ROW_H), "偏移", STATUS_FG, BG, 1, 0);
     for code in T_CODES {
         temp_key(p, code, false);
     }
     if p.sensor != 6 {
         // The NTC row's place: how to enter the offset exactly.
-        let hint = if p.sensor == 0 { "Tap the value to type it (TC: on the CJ)" } else { "Tap the value to type it" };
+        let hint = if p.sensor == 0 { "点数值可输入" } else { "点数值可输入" };
         sf::glyphs(sf::TEXT22, rect(8, T_NTC_Y, 464, T_ROW_H), hint, DIM, BG, 8, 0);
     }
     sf::glyphs(sf::TEXT22, T_INFO, p.info, STATUS_FG, BG, 1, 0);
@@ -2392,16 +2392,16 @@ pub fn rate_toast(buf: &mut [u8; 40], rate: u8, period_ms: u32, n: usize, ext: b
         let w = if ext { n.min(crate::dmm::AVG_FULL as usize) } else { n };
         let s = crate::dmm::format(&mut t, (w as u32 * period_ms) as f32 / 1000.0, 1);
         if ext {
-            put(", +1 digit in ");
+            put(", 附加位 ");
             put(s);
             put(" s");
         } else {
             put(", ");
             put(s);
-            put(" s average");
+            put(" s 平均");
         }
     } else {
-        put(", 60000 counts");
+        put(", 60000 计数");
     }
     core::str::from_utf8(&buf[..k]).unwrap_or("")
 }
@@ -2500,7 +2500,7 @@ pub fn wave_chip() {
     }
     #[cfg(test)]
     crate::probe::end();
-    sf::glyphs(sf::F14, rect(r.x + 26, r.y + 1, r.w - 28, r.h), "Wave", STATUS_FG, BTN, 1, 1);
+    sf::glyphs(sf::F14, rect(r.x + 26, r.y + 1, r.w - 28, r.h), "波形", STATUS_FG, BTN, 1, 1);
 }
 
 /// A tap on the Wave chip: the chart's corner x 80..159, y 226..272, larger
@@ -2761,7 +2761,7 @@ const G_DIM: Color = 0x7BEF;
 /// value (LETTERS, right-aligned to 411) and its unit (from 421) below.
 pub const GEN_BOX_Y: [i16; 4] = [40, 110, 180, 250];
 const GEN_BOX_H: i16 = 66;
-const GEN_NAMES: [&str; 4] = ["Frequency", "Vpp", "Offset", "Duty"];
+const GEN_NAMES: [&str; 4] = ["频率", "Vpp", "偏移", "占空"];
 
 /// The wave drop-down box (4, 40, 239, 42) under a tap.
 pub fn gen_wave_hit(x: u16, y: u16) -> bool {
@@ -3014,7 +3014,7 @@ fn gen_box(g: &gen::Gen, k: usize, bg: Color) {
                 (_, Some(o)) => gen_box_value(2, crate::dmm::format(&mut t, o, 2), true, "V", lv, bg),
                 (_, None) => gen_box_value(2, "auto", false, "", lv, bg),
             }
-            gen_box_note(k, if fixed { "logic level" } else { "" }, G_DIM, bg);
+            gen_box_note(k, if fixed { "逻辑电平" } else { "" }, G_DIM, bg);
         }
         _ => {
             // Duty: square only (DAC table or PWM counter, any frequency);
@@ -3054,14 +3054,14 @@ pub fn keypad_keys(kind: u8) -> &'static [Key; 15] {
             (r(420, 146, 56, 40), "H", b'H'), (r(228, 190, 60, 40), "4", b'4'), (r(292, 190, 60, 40), "5", b'5'),
             (r(356, 190, 60, 40), "6", b'6'), (r(420, 190, 56, 40), "k", b'K'), (r(228, 234, 60, 40), "7", b'7'),
             (r(292, 234, 60, 40), "8", b'8'), (r(356, 234, 60, 40), "9", b'9'), (r(420, 234, 56, 40), "M", b'M'),
-            (r(228, 277, 60, 40), "0", b'0'), (r(291, 277, 123, 40), "<", b'<'), (r(417, 277, 59, 40), "OK", b'='),
+            (r(228, 277, 60, 40), "0", b'0'), (r(291, 277, 123, 40), "<", b'<'), (r(417, 277, 59, 40), "确定", b'='),
         ];
     const NUM: [Key; 15] = [
             (r(228, 146, 60, 40), "1", b'1'), (r(292, 146, 60, 40), "2", b'2'), (r(356, 146, 60, 40), "3", b'3'),
             (r(228, 190, 60, 40), "4", b'4'), (r(292, 190, 60, 40), "5", b'5'), (r(356, 190, 60, 40), "6", b'6'),
             (r(228, 234, 60, 40), "7", b'7'), (r(292, 234, 60, 40), "8", b'8'), (r(356, 234, 60, 40), "9", b'9'),
             (r(228, 277, 60, 40), "0", b'0'), (r(291, 277, 123, 40), ".", b'.'), (r(417, 146, 59, 84), "<", b'<'),
-            (r(417, 234, 59, 83), "OK", b'='), (r(0, 0, 0, 0), "", 0), (r(0, 0, 0, 0), "", 0),
+            (r(417, 234, 59, 83), "确定", b'='), (r(0, 0, 0, 0), "", 0), (r(0, 0, 0, 0), "", 0),
         ];
     // NUM with the wide '.' split into '.' and "+/-".
     const SIGNED: [Key; 15] = [
@@ -3069,7 +3069,7 @@ pub fn keypad_keys(kind: u8) -> &'static [Key; 15] {
             (r(228, 190, 60, 40), "4", b'4'), (r(292, 190, 60, 40), "5", b'5'), (r(356, 190, 60, 40), "6", b'6'),
             (r(228, 234, 60, 40), "7", b'7'), (r(292, 234, 60, 40), "8", b'8'), (r(356, 234, 60, 40), "9", b'9'),
             (r(228, 277, 60, 40), "0", b'0'), (r(292, 277, 60, 40), ".", b'.'), (r(417, 146, 59, 84), "<", b'<'),
-            (r(417, 234, 59, 83), "OK", b'='), (r(356, 277, 58, 40), "+/-", b'-'), (r(0, 0, 0, 0), "", 0),
+            (r(417, 234, 59, 83), "确定", b'='), (r(356, 277, 58, 40), "+/-", b'-'), (r(0, 0, 0, 0), "", 0),
         ];
     match kind {
         KP_FREQ => &FREQ,
@@ -3157,10 +3157,10 @@ const M_ACCENT: Color = 0x04FC;
 const ICONS: sf::Font = sf::Font(0x0805_592C);
 
 pub const TILES: [(i16, i16, &str, u32); 4] = [
-    (46, 52, "Multimeter", 0x20),
-    (244, 52, "Oscilloscope", 0x21),
-    (46, 166, "Signal", 0x22),
-    (244, 166, "Settings", 0x23),
+    (46, 52, "万用表", 0x20),
+    (244, 52, "示波器", 0x21),
+    (46, 166, "信号源", 0x22),
+    (244, 166, "设置", 0x23),
 ];
 
 /// Pressed menu tile / row: the stock tile style's second colour
@@ -3187,10 +3187,10 @@ pub fn menu_item(i: usize, combo: &str, pressed: bool) {
         sf::glyphs(sf::TEXT22, rect(x, y + 58, 190, 27), name, STATUS_FG, bg, 8, 0);
     } else if i == 5 {
         // Gallery row above the tiles (FR-16).
-        sf::glyphs(sf::TEXT22, rect(46, 10, 388, 34), "Gallery: screenshots and logs", STATUS_FG, bg, 8, 0);
+        sf::glyphs(sf::TEXT22, rect(46, 10, 388, 34), "图库 截图记录", STATUS_FG, bg, 8, 0);
     } else {
         let mut t = [0u8; 48];
-        let pre = b"Combined view: ";
+        let pre = "组合视图：".as_bytes();
         t[..pre.len()].copy_from_slice(pre);
         let k = combo.len().min(48 - pre.len());
         t[pre.len()..pre.len() + k].copy_from_slice(&combo.as_bytes()[..k]);
@@ -3244,6 +3244,8 @@ pub const S_RAILS: u8 = 6;
 /// FR-05: the DMM rate / smoothing; UF-30: the DMM page's bargraph /
 /// history row.
 pub const S_RATE: u8 = 7;
+pub const RATE_NAMES: [&str; 3] = ["慢", "中", "快"];
+pub const SMOOTH_NAMES: [&str; 3] = ["关", "低", "高"];
 pub const S_SMOOTH: u8 = 8;
 pub const S_DMM_ROW: u8 = 9;
 pub const S_TEMP_UNIT: u8 = 10;
@@ -3279,22 +3281,22 @@ pub const SET_N: usize = 24;
 
 /// Row labels by id. In the Scope section without the "Scope" prefix.
 pub const SET_NAMES: [&str; SET_N] = [
-    "Dim screen", "Shutdown", "Backlight", "Key/alert volume", "Bluetooth", "Start page", "Analog power",
-    "DMM rate", "Smoothing", "DMM row", "Temp unit", "Swipe", "Press effect", "Tap step", "Help", "Jack alerts",
-    "Danger alarm", "USB disk", "Burden voltage", "Device info", "Touch test", "Accuracy", "Negative ohm",
-    "Mode Remember",
+    "暗屏时间", "关机时间", "背光亮度", "蜂鸣音量", "蓝牙", "开机屏", "电源方式",
+    "采样率", "平滑", "显示行", "温度单位", "滑动", "按压效果", "点按档位", "帮助", "告警开关",
+    "危险警报", "U盘", "负担电压", "设备信息", "触摸测试", "准确度", "负电阻",
+    "记忆模式",
 ];
 
 /// The sections: tab name, rows (ids, top to bottom; at most SET_ROWS_MAX).
 /// "Other" as the stock's Other Settings (USB, Bluetooth, Mode Remember
 /// there) with its Device section and our help / touch test pages.
 pub const SET_TABS: [(&str, &[u8]); 6] = [
-    ("Display", &[S_BACKLIGHT, S_DIM, S_START, S_DMM_ROW]),
-    ("Alerts", &[S_VOLUME, S_ALARM, S_JACK]),
-    ("Power", &[S_SHUTDOWN, S_RAILS, S_REMEMBER]),
-    ("Multimeter", &[S_RATE, S_SMOOTH, S_TEMP_UNIT, S_BURDEN, S_ACC, S_OHM_NEG]),
-    ("Scope", &[S_SWIPE, S_PRESS, S_TAP_STEP]),
-    ("Other", &[S_BT, S_USB, S_DEVICE, S_TOUCH, S_HELP]),
+    ("显示", &[S_BACKLIGHT, S_DIM, S_START, S_DMM_ROW]),
+    ("告警", &[S_VOLUME, S_ALARM, S_JACK]),
+    ("电源", &[S_SHUTDOWN, S_RAILS, S_REMEMBER]),
+    ("万用表", &[S_RATE, S_SMOOTH, S_TEMP_UNIT, S_BURDEN, S_ACC, S_OHM_NEG]),
+    ("示波器", &[S_SWIPE, S_PRESS, S_TAP_STEP]),
+    ("其他", &[S_BT, S_USB, S_DEVICE, S_TOUCH, S_HELP]),
 ];
 /// The section of the USB disk row (its value follows the bus), the
 /// Device / touch test / help rows (their pages return to it).
@@ -3314,10 +3316,10 @@ pub fn set_is_stepper(id: u8) -> bool {
 /// one in force differs (a host reads the WP bit when it mounts).
 pub fn usb_disk_name(ro_now: bool, ro_want: bool) -> &'static str {
     match (ro_want, ro_now == ro_want) {
-        (true, true) => "Files live",
-        (false, true) => "PC can edit",
-        (true, false) => "Files live (replug)",
-        (false, false) => "PC can edit (replug)",
+        (true, true) => "只读",
+        (false, true) => "可写",
+        (true, false) => "只读（重插）",
+        (false, false) => "可写（重插）",
     }
 }
 
@@ -3390,13 +3392,13 @@ fn page_title(title: &str) {
     // (two word spaces) to "< Back" starts that far after it instead ("Help
     // 5/7: Record + alerts" ran into it: device check 92fb8fa).
     let w = sf::text_width(sf::TEXT22, title, 0);
-    let back = BAR_X + 3 + sf::text_width(sf::TEXT22, "< Back", 0) + 28;
+    let back = BAR_X + 3 + sf::text_width(sf::TEXT22, "< 返回", 0) + 28;
     if (480 - w) / 2 >= back {
         sf::glyphs(sf::TEXT22, rect(0, 0, 480, PAGE_BAR_H), title, STATUS_FG, 0x2966, 8, 0);
     } else {
         sf::glyphs(sf::TEXT22, rect(back, 0, 476 - back, PAGE_BAR_H), title, STATUS_FG, 0x2966, 1, 0);
     }
-    sf::glyphs(sf::TEXT22, rect(BAR_X + 3, 0, 110, PAGE_BAR_H), "< Back", STATUS_FG, 0x2966, 1, 0);
+    sf::glyphs(sf::TEXT22, rect(BAR_X + 3, 0, 110, PAGE_BAR_H), "< 返回", STATUS_FG, 0x2966, 1, 0);
 }
 
 /// A tap on the title bar is "go back".
@@ -3463,7 +3465,7 @@ pub fn settings(tab: u8, vals: &[&str]) {
     let tab = (tab as usize).min(SET_TABS.len() - 1);
     let only = row_only();
     if only.is_none() {
-        page_title("Settings");
+        page_title("设置");
         lcd::fill_rect(0, PAGE_BAR_H as u16, lcd::W, lcd::H - PAGE_BAR_H as u16, M_BG);
     }
     for (i, (name, _)) in SET_TABS.iter().enumerate() {
@@ -3689,26 +3691,26 @@ pub fn list_hit(y: u16, n: usize) -> Option<usize> {
 /// 44 + 8 x 30 + 27 = 311): the way there for continuity, diode and
 /// frequency, which have no range page and so no Record button.
 pub const LIMIT_ROWS: [&str; 9] = [
-    "Auto Hold", "Limits", "Upper limit", "Lower limit", "Upper = reading", "Lower = reading", "Clear limits",
-    "Fail beep", "Record",
+    "自动保持", "限值", "上限", "下限", "上限=读数", "下限=读数", "清除限值",
+    "失败蜂鸣", "记录",
 ];
 
 /// Record page rows (decision 2026-10-22 #1): interval, On change
 /// threshold and duration with -/+ steppers (as Settings 1), the free-time
 /// estimate, Start / Stop.
-pub const RECORD_ROWS: [&str; 5] = ["Interval", "Change", "Duration", "Free", ""];
+pub const RECORD_ROWS: [&str; 5] = ["间隔", "变化", "时长", "可用", ""];
 /// Rows with a stepper on the Record page.
 pub const REC_STEP_ROWS: [usize; 3] = [0, 1, 2];
 /// Value texts of csvlog::INTERVALS_S / DURATIONS_S; the last interval,
 /// "Fast", is the fast logger (fastlog.rs: raw AD1 / AD2 samples to
 /// LOGS/FASTnnn.DLG at the LOG:OSR / LOG:SRATe rate; App::rec_fast).
 /// "On change" is csvlog::ON_CHANGE.
-pub const REC_INTERVALS: [&str; 6] = ["Every reading", "1 s", "10 s", "1 min", "On change", "Fast"];
+pub const REC_INTERVALS: [&str; 6] = ["每次", "1秒", "10秒", "1分", "变化时", "快"];
 /// Index of "Fast" in REC_INTERVALS.
 pub const REC_FAST: usize = 5;
 /// Texts of csvlog::CHANGES (the On change threshold, % of full scale).
 pub const REC_CHANGES: [&str; 3] = ["0.1 %", "1 %", "5 %"];
-pub const REC_DURATIONS: [&str; 5] = ["Until stopped", "10 min", "1 h", "8 h", "24 h"];
+pub const REC_DURATIONS: [&str; 5] = ["手动停", "10分", "1小时", "8小时", "24小时"];
 /// Record page row of the Start / Stop button.
 pub const REC_START_ROW: usize = 4;
 
@@ -3718,7 +3720,7 @@ pub const REC_START_ROW: usize = 4;
 /// interval, threshold, duration texts.
 pub fn record_page(vals: [&str; 3], free: &str, recording: bool) {
     let names = RECORD_ROWS;
-    list_page("Record", &names[..4], &["", "", "", free]);
+    list_page("记录", &names[..4], &["", "", "", free]);
     for (i, v) in REC_STEP_ROWS.iter().zip(vals) {
         set_stepper(*i, v, REC_STEP_MINUS_X);
     }
@@ -3727,7 +3729,7 @@ pub fn record_page(vals: [&str; 3], free: &str, recording: bool) {
         return;
     }
     let r = set_row(REC_START_ROW);
-    let (t, bg) = if recording { ("Stop recording", 0xF800) } else { ("Start recording", M_ACCENT) };
+    let (t, bg) = if recording { ("停止记录", 0xF800) } else { ("开始记录", M_ACCENT) };
     let bg = if only.is_some_and(|p| p.on) { KEY_PRESSED } else { bg };
     sf::rbox(r, 6, bg, M_BG);
     sf::glyphs(sf::TEXT22, r, t, STATUS_FG, bg, 8, 0);
@@ -3735,22 +3737,22 @@ pub fn record_page(vals: [&str; 3], free: &str, recording: bool) {
 
 pub fn view_name(v: View) -> &'static str {
     match v {
-        View::Dmm => "Multimeter",
-        View::Scope => "Oscilloscope",
-        View::Gen => "Signal",
-        View::DmmScope => "DMM + Scope",
-        View::Menu => "Main menu",
-        View::Settings => "Settings",
-        View::Range => "Range",
-        View::Keypad => "Keypad",
-        View::Device => "Device",
-        View::Limits => "Hold & Limits",
-        View::Record => "Record",
-        View::Gallery => "Gallery",
-        View::Help => "Help",
-        View::Inrush => "Inrush",
-        View::TouchTest => "Touch test",
-        View::Decode => "Decode log",
+        View::Dmm => "万用表",
+        View::Scope => "示波器",
+        View::Gen => "信号源",
+        View::DmmScope => "万用表+示波器",
+        View::Menu => "主菜单",
+        View::Settings => "设置",
+        View::Range => "量程",
+        View::Keypad => "键盘",
+        View::Device => "设备",
+        View::Limits => "保持限值",
+        View::Record => "记录",
+        View::Gallery => "图库",
+        View::Help => "帮助",
+        View::Inrush => "涌流",
+        View::TouchTest => "触摸测试",
+        View::Decode => "解码记录",
     }
 
 }
@@ -3762,25 +3764,25 @@ pub fn view_name(v: View) -> &'static str {
 /// pages were 1.4 KB of region B text); the manual has the rest.
 pub const HELP: [(&str, &[(&str, &str)]); 2] = [
     (
-        "Gestures",
+        "手势",
         &[
-            ("Swipe left / right", "Change view"),
-            ("Swipe down (DMM)", "Record on / off"),
-            ("3 fingers down", "Screenshot"),
-            ("2 fingers down", "Power off"),
-            ("Scope: drag marker", "Move that marker"),
-            ("Scope: side drag", "Trigger position"),
-            ("Scope: drag up/down", "Selected item"),
+            ("左右滑动", "切换视图"),
+            ("下滑（万用表）", "开始/停止记录"),
+            ("三指下滑", "截图"),
+            ("双指下滑", "关机"),
+            ("示波器：拖动标记", "移动标记"),
+            ("示波器：左右拖动", "触发位置"),
+            ("示波器：上下拖动", "选中项目"),
         ],
     ),
     (
-        "Keys",
+        "按键",
         &[
-            ("MENU", "Menu / back"),
-            ("RUN", "Hold; run / stop"),
-            ("AUTO", "Autorange"),
-            ("MF", "Range / menu"),
-            ("Power key twice", "Touch lock"),
+            ("MENU", "菜单/返回"),
+            ("RUN", "保持；运行/停止"),
+            ("AUTO", "自动量程"),
+            ("MF", "量程/菜单"),
+            ("双击电源键", "触摸锁定"),
         ],
     ),
 ];
@@ -3817,10 +3819,10 @@ pub fn help_page(page: usize) {
     put(core::str::from_utf8(&nb[..k]).unwrap_or(""));
     put(": ");
     put(topic);
-    page_title(core::str::from_utf8(&t[..n]).unwrap_or("Help"));
+    page_title(core::str::from_utf8(&t[..n]).unwrap_or("帮助"));
     lcd::fill_rect(0, PAGE_BAR_H as u16, lcd::W, lcd::H - PAGE_BAR_H as u16, M_BG);
     let next = HELP[(page + 1) % HELP.len()].0;
-    let last = ("Tap: next page", next);
+    let last = ("点按翻页", next);
     for (i, (name, val)) in rows.iter().chain(core::iter::once(&last)).enumerate().take(SET_ROWS) {
         let r = set_row(i);
         sf::rbox(r, 6, M_TILE, M_BG);
@@ -3858,7 +3860,7 @@ pub fn device_software(buf: &mut [u8; 48]) -> &str {
 /// menu pages. `lines` are (label, value) pairs built by the caller.
 #[inline(never)] // .cold (link-native.x): page draw
 pub fn device_page(lines: &[(&str, &str)]) {
-    page_title("Device");
+    page_title("设备");
     lcd::fill_rect(0, PAGE_BAR_H as u16, lcd::W, lcd::H - PAGE_BAR_H as u16, M_BG);
     for (i, (label, value)) in lines.iter().enumerate() {
         // Eight rows end 4 px above the screen edge.

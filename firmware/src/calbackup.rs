@@ -160,6 +160,11 @@ pub trait Source {
     /// Must return the same bytes every time (the writer reads them twice:
     /// to write and to verify).
     fn fill(&self, off: u32, buf: &mut [u8]);
+    /// 磁盘上的源文件可能读取失败；失败时不能提交新的目录项。
+    fn try_fill(&self, off: u32, buf: &mut [u8]) -> bool {
+        self.fill(off, buf);
+        true
+    }
     /// CRC-32 of the whole contents (vdisk.rs BACKUP.TXT).
     fn crc(&self) -> u32 {
         let mut t = [0u8; 256];
@@ -614,7 +619,9 @@ fn walk(dev: &mut dyn BlockDevice, v: &Vol, start: u32, size: u32, data: &dyn So
                     return None;
                 }
                 let end = (off + BLK).min(len);
-                data.fill(off as u32, &mut tmp[..end - off]);
+                if !data.try_fill(off as u32, &mut tmp[..end - off]) {
+                    return None;
+                }
                 if buf[..end - off] != tmp[..end - off] {
                     equal = false;
                     break;
@@ -796,7 +803,9 @@ fn run_inner(dev: &mut dyn BlockDevice, files: &[F], missing_only: bool) -> Resu
                 if end - off < BLK && !dev.read_block(lba, buf) {
                     return res;
                 }
-                d.fill(off as u32, &mut buf[..end - off]);
+                if !d.try_fill(off as u32, &mut buf[..end - off]) {
+                    return res;
+                }
                 // A file's data is being (re)written: at boot only on the
                 // first start after an update or a calibration change (the
                 // INFO/ mirror, the safety copy, the settings file), which is

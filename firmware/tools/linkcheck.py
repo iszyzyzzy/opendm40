@@ -2,7 +2,7 @@
 """Check every relative Markdown link and #anchor in the tracked *.md files,
 and that docs/README.md links every firmware/docs/*.md and docs/*.md.
 Usage: firmware/tools/linkcheck.py [REPO_ROOT]  (default: the current directory)."""
-import os, re, subprocess, sys, urllib.parse
+import os, posixpath, re, subprocess, sys, urllib.parse
 root = sys.argv[1] if len(sys.argv) > 1 else '.'
 os.chdir(root)
 files = [f for f in subprocess.check_output(['git', 'ls-files', '*.md'], text=True).split('\n') if f and not f.startswith('firmware/vendor/')]
@@ -41,7 +41,7 @@ for f in files:
         if re.match(r'^[a-z]+:', t) or t.startswith('//'): continue
         path, _, frag = t.partition('#')
         path = urllib.parse.unquote(path)
-        tgt = os.path.normpath(os.path.join(os.path.dirname(f), path)) if path else f
+        tgt = posixpath.normpath(posixpath.join(os.path.dirname(f), path)) if path else f
         # Untracked targets (stock/re/ is a private clone, gitignored) are
         # missing for every other reader, CI included.
         if not os.path.exists(tgt) or (tgt not in tracked and tgt not in tracked_dirs):
@@ -52,7 +52,7 @@ for f in files:
 # docs index: docs/README.md links every doc in firmware/docs/ and docs/ (not in subfolders)
 IDX = 'docs/README.md'
 idx = open(IDX, encoding='utf-8').read()
-linked = {os.path.normpath(os.path.join('docs', (m.group(1) or '').partition('#')[0])) for m in LINK.finditer(idx) if m.group(1)}
+linked = {posixpath.normpath(posixpath.join('docs', (m.group(1) or '').partition('#')[0])) for m in LINK.finditer(idx) if m.group(1)}
 for d in sorted(x for x in files if re.match(r'(firmware/)?docs/[^/]+\.md$', x) and x != IDX):
     if d not in linked:
         print('%s: does not link %s' % (IDX, d)); bad += 1

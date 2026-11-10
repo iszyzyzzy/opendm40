@@ -24,6 +24,23 @@ alerts](#safety-and-alerts)), but they cannot catch every mistake.
 **Status.** Ready to use. Tested and used by several people. Validated
 against a calibrator and against the stock firmware.
 
+## Chinese edition and boot image
+
+The Chinese edition `0.5.0-zh1` is based on v0.4.1. See the
+[Chinese guide](../chinese.md) for the interface and installation.
+
+The built-in startup screen is used until a custom image is imported.
+Run `uv run --with pillow python firmware/tools/boot-image.py picture.png`
+from the repository root. The tool fits the image into 480×320 pixels with
+black padding and writes `BOOT.RAW` (307,200 bytes, RGB565 little-endian).
+Select writable USB disk mode in Settings, reconnect USB, copy `BOOT.RAW`
+to the root, wait for the saved message, safely eject and restart the meter.
+The picture stays in SPI flash; the import file disappears from the virtual
+disk after reconnecting. Copy another file with the same name to replace it.
+Use `firmware/tools/boot-image.py --default` to create a restore-default
+file and import it the same way. Invalid files leave the saved image intact;
+a missing or unreadable image uses the built-in screen.
+
 ## Contents
 
 1. [Getting started](#getting-started): install and update, keys, gestures,
@@ -2260,7 +2277,8 @@ Set in **Settings > Other > USB disk**.
 - **PC can edit**: you can delete files in `LOGS/`, `SCOPE/` and `SHOTS/`
   from the computer, and copy a firmware update file into the top folder
   ([Update](#update)). New files from the meter appear only after an eject
-  or a re-plug. Nothing else can be changed: other files copied onto the
+  or a re-plug. This edition also imports `BOOT.RAW` as a boot image (see
+  [the Chinese guide](../chinese.md)). Other files copied onto the
   drive are gone at the next eject or re-plug, and `INFO/` and `DEBUG/` stay
   read-only.
 

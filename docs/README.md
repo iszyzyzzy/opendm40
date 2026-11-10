@@ -109,3 +109,5 @@ All documentation of opendm40, by reader. Start at the
 
 - [history/README.md](history/README.md): finished plans, reviews,
   investigations and decision logs. Not maintained.
+
+- [Chinese edition and custom boot image](chinese.md) (中文)

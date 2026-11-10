@@ -167,10 +167,10 @@ pub fn busy_reason() -> Option<Busy> {
 
 fn busy_text(b: Busy) -> &'static str {
     match b {
-        Busy::Shot => "Saving a screenshot",
-        Busy::Log => "Saving the CSV log",
-        Busy::Host => "USB host is writing",
-        Busy::Upload => "Firmware upload",
+        Busy::Shot => "正在保存截图",
+        Busy::Log => "正在保存记录",
+        Busy::Host => "电脑正在写入",
+        Busy::Upload => "正在上传固件",
     }
 }
 
@@ -1124,7 +1124,7 @@ fn r4(r: (u16, u16, u16, u16)) -> Rect {
 /// ui.rs page_title: bar, "< Back".
 fn title_bar() {
     fill((0, 0, 480, BAR_H), BAR);
-    sf::glyphs(sf::TEXT22, rect(BACK_X, 0, 110, BAR_H), "< Back", FG, BAR, 1, 0);
+    sf::glyphs(sf::TEXT22, rect(BACK_X, 0, 110, BAR_H), "< 返回", FG, BAR, 1, 0);
 }
 
 /// Word space of F14 text, px from the last glyph box of a word to the next
@@ -1191,13 +1191,13 @@ fn dialog_box(title: &str, body: &str, yes: Option<&str>) {
     frame(b, D_FRAME);
     match yes {
         Some(y) => {
-            lab(crate::dialog::NO, "Cancel", D_BTN);
+            lab(crate::dialog::NO, "取消", D_BTN);
             frame(crate::dialog::NO, D_FRAME);
             lab(crate::dialog::YES, y, D_RED);
             frame(crate::dialog::YES, D_FRAME);
         }
         None => {
-            lab(OK_BTN, "OK", D_BTN);
+            lab(OK_BTN, "确定", D_BTN);
             frame(OK_BTN, D_FRAME);
         }
     }
@@ -1786,7 +1786,7 @@ impl Gallery {
                 }
             }
             None => {
-                self.vmsg = Some(("Read error", 0, 0));
+                self.vmsg = Some(("读取失败", 0, 0));
                 self.paint |= P_ALL;
             }
         }
@@ -1802,10 +1802,10 @@ impl Gallery {
         let r = match r {
             Ok(()) => Ok(()),
             // The file being recorded (csvlog::delete_on): retrying cannot help.
-            Err(GErr::Busy) if csvlog::recording_name() == Some(self.cur.name) => Err(("Cannot delete", "Stop the recording")),
-            Err(GErr::Busy) => Err(("Cannot delete", "Disk busy, try again")),
-            Err(GErr::NotFound) => Err(("Cannot delete", "File not found")),
-            Err(_) => Err(("Cannot delete", "Delete failed")),
+            Err(GErr::Busy) if csvlog::recording_name() == Some(self.cur.name) => Err(("无法删除", "请停止记录")),
+            Err(GErr::Busy) => Err(("无法删除", "磁盘忙, 请重试")),
+            Err(GErr::NotFound) => Err(("无法删除", "文件不存在")),
+            Err(_) => Err(("无法删除", "删除失败")),
         };
         match r {
             Ok(()) => {
@@ -1827,7 +1827,7 @@ impl Gallery {
             Err((t, m)) => {
                 self.dlg = Dlg::Info(t, m);
                 self.paint |= P_DLG;
-                if m == "File not found" {
+                if m == "文件不存在" {
                     self.need |= N_LIST | N_FIND;
                 }
             }
@@ -1899,7 +1899,7 @@ impl Gallery {
                 let (x, y) = tile_xy(i as usize);
                 let p = rect(x + 4, y + 4, TH_W as i16, TH_H as i16);
                 sf::rbox(p, 4, PANEL, M_TILE);
-                let (a, b) = if m == "Unsupported format" { ("Unsupported", "format") } else { (m, "") };
+                let (a, b) = if m == "不支持的格式" { ("不支持", "format") } else { (m, "") };
                 small(rect(p.x, p.y + 30, p.w, 14), a, FG, PANEL, 8);
                 if !b.is_empty() {
                     small(rect(p.x, p.y + 50, p.w, 14), b, FG, PANEL, 8);
@@ -1920,11 +1920,11 @@ impl Gallery {
         match (e.kind, self.job.ph) {
             (Kind::Bmp, Ph::Head) => {
                 if size == 0 || !read_fb(io, &mut self.job.chain, 0) {
-                    return self.fail(if size == 0 { "Empty file" } else { "Read error" }, 0, 0);
+                    return self.fail(if size == 0 { "空文件" } else { "读取失败" }, 0, 0);
                 }
                 let b = match Bmp::parse(&io.data[..], size) {
                     Ok(b) => b,
-                    Err((bpp, comp)) => return self.fail("Unsupported format", bpp, comp),
+                    Err((bpp, comp)) => return self.fail("不支持的格式", bpp, comp),
                 };
                 let j = &mut self.job;
                 j.bmp = b;
@@ -1966,7 +1966,7 @@ impl Gallery {
             (Kind::Bmp, _) => {
                 let fb = self.job.i;
                 if !read_fb(io, &mut self.job.chain, fb) {
-                    return self.fail("Read error", 0, 0);
+                    return self.fail("读取失败", 0, 0);
                 }
                 let len = (size - fb * BLK).min(BLK) as usize;
                 self.job.pix_block(&io.data[..len], fb);
@@ -1998,13 +1998,13 @@ impl Gallery {
             }
             j.csv = CSV0;
             let Some((kind, hl, ul, unit)) = dlog::parse_file(&mut src, e.size) else {
-                return self.fail("Unsupported format", 0, 0);
+                return self.fail("不支持的格式", 0, 0);
             };
             // The header text's first line: function, range.
             let mut t = [0u8; 160];
             let n = (hl as usize).min(t.len());
             if !src.read(dlog::FHDR as u32, &mut t[..n]) {
-                return self.fail("Read error", 0, 0);
+                return self.fail("读取失败", 0, 0);
             }
             j.csv.header(&t[..n]);
             let k = ul.min(j.csv.unit.len());
@@ -2016,7 +2016,7 @@ impl Gallery {
                 // or raw counts (AD1), rows at device time.
                 let mut p = [0u8; dlog::FAST_PAR];
                 let Some(fp) = src.read(j.csv.hdr, &mut p).then(|| dlog::FPar::parse(&p)).flatten() else {
-                    return self.fail("Unsupported format", 0, 0);
+                    return self.fail("不支持的格式", 0, 0);
                 };
                 j.csv.fast = Some(fp);
                 j.csv.hdr += dlog::FAST_PAR as u32;
@@ -2081,7 +2081,7 @@ impl Gallery {
         let j = &mut self.job;
         let c = j.csv;
         // The recording in progress: only its committed part is read.
-        let none = if csvlog::recording_name() == Some(j.ent.name) { "Recording" } else { "No data" };
+        let none = if csvlog::recording_name() == Some(j.ent.name) { "正在记录" } else { "无数据" };
         let mut func = Tb::new();
         func.bytes(if c.fl > 0 { &c.func[..c.fl as usize] } else { b"Log" });
         let mut rows = Tb::new();
@@ -2200,24 +2200,24 @@ impl Gallery {
         match self.mode {
             Mode::Grid => {
                 title_bar();
-                sf::glyphs(sf::TEXT22, rect(0, 0, 480, BAR_H), "Gallery", FG, BAR, 8, 0);
+                sf::glyphs(sf::TEXT22, rect(0, 0, 480, BAR_H), "图库", FG, BAR, 8, 0);
                 fill((0, BAR_H, 480, 320 - BAR_H), M_BG);
                 self.job = JOB0;
                 self.todo = 0;
                 match self.st {
                     St::Listing => {
                         let (m, d) = match self.busy {
-                            Some(b) => ("Disk busy", busy_text(b)),
-                            None => ("Reading the disk", ""),
+                            Some(b) => ("磁盘忙", busy_text(b)),
+                            None => ("正在读取磁盘", ""),
                         };
                         message(M_BG, m, d);
                     }
-                    St::NoDisk => message(M_BG, "No disk", "The SPI flash disk is missing or not FAT16"),
-                    St::Error => message(M_BG, "Disk read error", "Leave and open the gallery again to retry"),
+                    St::NoDisk => message(M_BG, "无磁盘", "磁盘不可用或非 FAT16"),
+                    St::Error => message(M_BG, "磁盘读取失败", "退出图库后重新打开"),
                     St::Ok => {
                         self.grid_info();
                         if self.total == 0 {
-                            message(M_BG, "No screenshots or logs", "Swipe down with 3 fingers to save a screenshot");
+                            message(M_BG, "暂无截图或记录", "三指下滑保存截图");
                         } else {
                             for i in 0..self.n {
                                 self.tile(i);
@@ -2233,7 +2233,7 @@ impl Gallery {
                     fill((0, BAR_H, 480, 320 - BAR_H), M_BG);
                     if self.mode == Mode::View && self.busy.is_none() && self.vmsg.is_none() {
                         // Pass A of a long log takes up to ~1 s.
-                        message(M_BG, "Reading the log", "");
+                        message(M_BG, "正在读取记录", "");
                     }
                 } else {
                     fill((0, 0, 480, 320), IMG_BG);
@@ -2282,7 +2282,7 @@ impl Gallery {
                 }
                 message(bg, m, t.str());
             }
-            (None, Some(b)) => message(bg, "Disk busy", busy_text(b)),
+            (None, Some(b)) => message(bg, "磁盘忙", busy_text(b)),
             _ => {}
         }
     }
@@ -2305,13 +2305,13 @@ impl Gallery {
     fn nav(&self) {
         fill((0, NAV_Y - 2, 480, NAV_H + 4), M_BG);
         let pages = self.pages();
-        for (x, txt, on) in [(PREV_X, "< Prev", self.page > 0), (NEXT_X, "Next >", self.page + 1 < pages)] {
+        for (x, txt, on) in [(PREV_X, "< 上页", self.page > 0), (NEXT_X, "下页 >", self.page + 1 < pages)] {
             sf::rbox(rect(x, NAV_Y, NAV_W, NAV_H), 6, M_TILE, M_BG);
             sf::glyphs(sf::TEXT22, rect(x, NAV_Y, NAV_W, NAV_H), txt, if on { FG } else { DIM }, M_TILE, 8, 0);
         }
         let mut t = Tb::new();
         match self.busy {
-            Some(_) => t.s("Disk busy"),
+            Some(_) => t.s("磁盘忙"),
             None => {
                 t.s("Page ");
                 t.u(self.page + 1);
@@ -2353,8 +2353,8 @@ impl Gallery {
     fn paint_dialog(&mut self) {
         match self.dlg {
             Dlg::Delete | Dlg::Deleting => {
-                let t = if self.cur.kind == Kind::Csv { "Delete this log?" } else { "Delete screenshot?" };
-                dialog_box(t, name_txt(&self.cur.name).str(), Some("Delete"))
+                let t = if self.cur.kind == Kind::Csv { "删除记录？" } else { "删除截图？" };
+                dialog_box(t, name_txt(&self.cur.name).str(), Some("删除"))
             }
             Dlg::Info(t, m) => dialog_box(t, m, None),
         }
@@ -2431,7 +2431,7 @@ fn title_bar_view(rank: u32, total: u32, e: &Ent) {
         small(rect(gx + wn + 10, 0, wi + 2, BAR_H), idx.str(), DIM, BAR, 1);
     }
     sf::rbox(rect(DEL.0, DEL.1, DEL.2, DEL.3), 6, D_RED, BAR);
-    sf::glyphs(sf::TEXT22, rect(DEL.0, DEL.1, DEL.2, DEL.3), "Delete", FG, D_RED, 8, 0);
+    sf::glyphs(sf::TEXT22, rect(DEL.0, DEL.1, DEL.2, DEL.3), "删除", FG, D_RED, 8, 0);
 }
 
 impl Job {

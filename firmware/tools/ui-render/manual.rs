@@ -239,13 +239,13 @@ pub fn run(out: &str) -> usize {
     let mut fwb = [0u8; 48];
     let ver = ui::device_software(&mut fwb);
     ui::device_page(&[
-        ("Vendor", "Alientek"),
-        ("Model", "DM40A"),
+        ("厂商", "Alientek"),
+        ("型号", "DM40A"),
         ("SN", "12345678"),
-        ("Bootloader", "V4.0"),
-        ("Software", ver),
-        ("Hardware", "V1.1"),
-        ("Board temp", "31.5 C (MCU)"),
+        ("引导程序", "V4.0"),
+        ("软件", ver),
+        ("硬件", "V1.1"),
+        ("板温", "31.5 C (MCU)"),
     ]);
     ck.check_opts("manual/device", &page, false);
     save1(out, "device");

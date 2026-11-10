@@ -62,8 +62,8 @@ const TIM13_CCR1: u32 = 0x4000_1C34;
 /// Offered stock options: dim 5/10/30 min/never, shutdown 10/30/60 min/never.
 const DIM_MS: [u64; 4] = [300_000, 600_000, 1_800_000, 0];
 const OFF_MS: [u64; 4] = [600_000, 1_800_000, 3_600_000, 0];
-const DIM_TXT: [&str; 4] = ["5 min", "10 min", "30 min", "Never"];
-const OFF_TXT: [&str; 4] = ["10 min", "30 min", "1 hour", "Never"];
+const DIM_TXT: [&str; 4] = ["5分", "10分", "30分", "永不"];
+const OFF_TXT: [&str; 4] = ["10分", "30分", "1小时", "永不"];
 /// Wake gate (stock FUN_08020248, stock/re/stock-ui-notes/interaction.md D.3):
 /// after an idle dim the first touch / side key only restores the backlight,
 /// and input is ignored for this long from it. opendm40 also drops the rest of
@@ -117,7 +117,7 @@ fn alert_mask_name(b: &mut [u8; 16], m: u8) -> &str {
     let m = m & M_JACK;
     match m {
         M_JACK => "ON",
-        M_AJACK => "A-JACK only",
+        M_AJACK => "仅 A-JACK",
         0 => "OFF",
         _ => {
             let t = b"Mask ";
@@ -980,7 +980,7 @@ impl App {
                 // UF-21: AUTO+ (never steps down to mV) is the recommended V
                 // autorange; warn while the mV-first AUTO is in use.
                 let note = (b == Button::Volt).then(|| {
-                    if self.dmm.mv_auto_warn() { (dmm::MV_AUTO_WARN, true) } else { ("AUTO+ recommended: never steps to mV", false) }
+                    if self.dmm.mv_auto_warn() { (dmm::MV_AUTO_WARN, true) } else { ("自动+ 更安全: 不降到 mV", false) }
                 });
                 let sub = if b == Button::Ohm { self.dmm.ohm_var() } else { self.dmm.sub() };
                 ui::range_page(b, sel, sub, note);
@@ -1000,7 +1000,7 @@ impl App {
                 let mut vb = [0u8; 32];
                 let mut n = 0;
                 let applies = self.dmm.rate_applies();
-                for part in [dmm::RATE_NAMES[self.dmm.rate() as usize], if applies { "  " } else { " (n/a here)" }, if applies { rps } else { "" }] {
+                for part in [ui::RATE_NAMES[self.dmm.rate() as usize], if applies { "  " } else { "（固定）" }, if applies { rps } else { "" }] {
                     let k = part.len().min(32 - n);
                     vb[n..n + k].copy_from_slice(&part.as_bytes()[..k]);
                     n += k;
@@ -1025,20 +1025,20 @@ impl App {
                 vals[ui::S_VOLUME as usize] = core::str::from_utf8(&b1[..n1]).unwrap_or("");
                 vals[ui::S_BT as usize] = if self.bt_on { "ON" } else { "OFF" };
                 vals[ui::S_START as usize] = ui::view_name(START[self.start_page]);
-                vals[ui::S_RAILS as usize] = if self.rails_both { "Both always" } else { "Auto (per view)" };
+                vals[ui::S_RAILS as usize] = if self.rails_both { "两者常开" } else { "自动 (按视图)" };
                 vals[ui::S_RATE as usize] = core::str::from_utf8(&vb[..n]).unwrap_or("");
-                vals[ui::S_SMOOTH as usize] = crate::meter::SMOOTH_NAMES[self.meter.smoothing() as usize];
-                vals[ui::S_DMM_ROW as usize] = if self.dmm_view.bar_on { "Bargraph" } else { "History" };
-                vals[ui::S_TEMP_UNIT as usize] = if self.dmm.temp_f() { "\u{2109} (Fahrenheit)" } else { "\u{2103} (Celsius)" };
-                vals[ui::S_SWIPE as usize] = if self.sp.swipes { "Top bar" } else { "Off (stock)" };
-                vals[ui::S_PRESS as usize] = if self.sp.press_fx { "ON" } else { "OFF (stock)" };
+                vals[ui::S_SMOOTH as usize] = ui::SMOOTH_NAMES[self.meter.smoothing() as usize];
+                vals[ui::S_DMM_ROW as usize] = if self.dmm_view.bar_on { "柱状图" } else { "历史" };
+                vals[ui::S_TEMP_UNIT as usize] = if self.dmm.temp_f() { "\u{2109} 华氏" } else { "\u{2103} 摄氏" };
+                vals[ui::S_SWIPE as usize] = if self.sp.swipes { "顶栏" } else { "关 (原厂)" };
+                vals[ui::S_PRESS as usize] = if self.sp.press_fx { "ON" } else { "关 (原厂)" };
                 vals[ui::S_TAP_STEP as usize] = crate::scope_ui::TAP_NAMES[self.sp.tap_mode.min(2) as usize];
                 vals[ui::S_JACK as usize] = alert_mask_name(&mut ab, self.dmm.alert_mask());
-                vals[ui::S_ALARM as usize] = crate::danger::NAMES[self.alarm_mode.min(2) as usize];
+                vals[ui::S_ALARM as usize] = ["高", "音量", "关"][self.alarm_mode.min(2) as usize];
                 vals[ui::S_USB as usize] = ui::usb_disk_name(self.usb_ro_drawn.0, self.usb_ro_drawn.1);
-                vals[ui::S_BURDEN as usize] = if self.dmm.burden_show { "ON (A, mA, uA)" } else { "OFF (stock)" };
+                vals[ui::S_BURDEN as usize] = if self.dmm.burden_show { "开 (A, mA, uA)" } else { "关 (原厂)" };
                 vals[ui::S_ACC as usize] = if self.dmm_view.acc_on { "ON" } else { "OFF" };
-                vals[ui::S_OHM_NEG as usize] = if self.dmm.ohm_neg { "ON" } else { "OFF (stock)" };
+                vals[ui::S_OHM_NEG as usize] = if self.dmm.ohm_neg { "ON" } else { "关 (原厂)" };
                 vals[ui::S_REMEMBER as usize] = if self.mode_remember { "ON" } else { "OFF" };
                 ui::settings(self.set_tab, &vals);
             }
@@ -1088,13 +1088,13 @@ impl App {
                 }
                 let mcu = if tn > 0 { core::str::from_utf8(&tb[..tn]).unwrap_or("--") } else { "--" };
                 let lines = [
-                    ("Vendor", "Alientek"),
-                    ("Model", model_name),
+                    ("厂商", "Alientek"),
+                    ("型号", model_name),
                     ("SN", sn),
-                    ("Bootloader", bl),
-                    ("Software", fw),
-                    ("Hardware", hw),
-                    ("Board temp", mcu),
+                    ("引导程序", bl),
+                    ("软件", fw),
+                    ("硬件", hw),
+                    ("板温", mcu),
                 ];
                 ui::device_page(&lines);
             }
@@ -1218,7 +1218,7 @@ impl App {
     fn resolution_cycle(&mut self, now: u64) {
         if !self.dmm.rate_applies() {
             self.beep(now, 300);
-            self.toast(now, "Fixed rate in this function", false);
+            self.toast(now, "此功能固定速率", false);
             return;
         }
         let r = next_rate(self.dmm.rate());
@@ -1474,7 +1474,7 @@ impl App {
         }
         if self.fast_rate().is_none() {
             self.beep(now, 300);
-            self.toast(now, "Fast: DC/AC V or A only", false);
+            self.toast(now, "快速仅限 V/A", false);
             return true;
         }
         let di = crate::csvlog::next().1 as usize;
@@ -1505,12 +1505,12 @@ impl App {
                 t[10] = b'0' + (n / 100 % 10) as u8;
                 t[11] = b'0' + (n / 10 % 10) as u8;
                 t[12] = b'0' + (n % 10) as u8;
-                (core::str::from_utf8(&t).unwrap_or("Saved"), true)
+                (core::str::from_utf8(&t).unwrap_or("已保存"), true)
             }
-            (State::Done, None) => ("Fast log cancelled", true),
-            (State::Full, None) => ("Disk full", false),
-            (State::NoDisk, _) => ("No disk", false),
-            _ => ("Fast log failed", false),
+            (State::Done, None) => ("高速记录已取消", true),
+            (State::Full, None) => ("磁盘已满", false),
+            (State::NoDisk, _) => ("无磁盘", false),
+            _ => ("高速记录失败", false),
         };
         self.toast(now, txt, ok);
         self.beep(now, if ok { 100 } else { 500 });
@@ -1859,7 +1859,11 @@ impl App {
                     self.beep(now, 150);
                 }
                 Some(false) => self.toast(now, crate::dialog::FW_BAD, false),
-                None => {}
+                None => {
+                    if let Some(ok) = crate::vwrite::take_boot_result() {
+                        self.toast(now, if ok { "开机图已保存，重启生效" } else { "开机图保存失败" }, ok);
+                    }
+                }
             }
         }
         if self.view == View::Settings && self.set_tab == ui::TAB_OTHER && self.usb_ro_drawn != usb_ro() {
@@ -2148,19 +2152,19 @@ impl App {
 
     fn kp_labels(&self) -> (&'static str, &'static str) {
         match self.kp_target {
-            0 => ("Frequency", match self.kp_mult {
+            0 => ("频率", match self.kp_mult {
                 b'M' => "MHz",
                 b'K' => "kHz",
                 _ => "Hz",
             }),
             1 => ("Vpp", "V"),
-            2 => ("Duty", "%"),
-            5 => ("Offset", "V"),
-            KP_T_OFFS => ("Offset", "\u{2103}"),
+            2 => ("占空", "%"),
+            5 => ("偏移", "V"),
+            KP_T_OFFS => ("偏移", "\u{2103}"),
             KP_NTC_R25 => ("R25", "k"),
             KP_NTC_BETA => ("Beta", "K"),
-            3 => ("Upper", kp_unit_text(self.kp_unit)),
-            _ => ("Lower", kp_unit_text(self.kp_unit)),
+            3 => ("上限", kp_unit_text(self.kp_unit)),
+            _ => ("下限", kp_unit_text(self.kp_unit)),
         }
     }
 
@@ -3058,7 +3062,7 @@ impl App {
                         crate::vwrite::answer(yes);
                         self.overlay_close();
                         if yes {
-                            self.toast(now, "Installing firmware...", true);
+                            self.toast(now, "正在安装固件...", true);
                         }
                     }
                 }
@@ -3605,10 +3609,10 @@ impl App {
             self.beep(now, 60);
         } else if self.rec_start(now) {
             self.beep(now, 60);
-            self.toast(now, "Recording CSV", true);
+            self.toast(now, "正在记录", true);
         } else {
             self.beep(now, 300);
-            self.toast(now, "No reading to log", false);
+            self.toast(now, "无数值可记录", false);
         }
     }
 
@@ -3621,11 +3625,11 @@ impl App {
                 t[9] = b'0' + (n / 100 % 10) as u8;
                 t[10] = b'0' + (n / 10 % 10) as u8;
                 t[11] = b'0' + (n % 10) as u8;
-                (core::str::from_utf8(&t).unwrap_or("Saved"), true)
+                (core::str::from_utf8(&t).unwrap_or("已保存"), true)
             }
-            (State::Full, _) => ("Disk full: log ended", false),
-            (State::NoDisk, _) => ("No disk", false),
-            _ => ("Log failed", false),
+            (State::Full, _) => ("磁盘已满，记录结束", false),
+            (State::NoDisk, _) => ("无磁盘", false),
+            _ => ("记录失败", false),
         };
         self.toast(now, txt, ok);
         self.beep(now, if ok { 100 } else { 500 });
@@ -3640,12 +3644,12 @@ impl App {
                 t[7] = b'0' + (n / 100 % 10) as u8;
                 t[8] = b'0' + (n / 10 % 10) as u8;
                 t[9] = b'0' + (n % 10) as u8;
-                (core::str::from_utf8(&t).unwrap_or("Saved"), true)
+                (core::str::from_utf8(&t).unwrap_or("已保存"), true)
             }
-            Shot::NoDisk => ("No disk", false),
-            Shot::Full => ("Disk full", false),
-            Shot::Error => ("Screenshot failed", false),
-            Shot::Busy => ("Disk busy", false),
+            Shot::NoDisk => ("无磁盘", false),
+            Shot::Full => ("磁盘已满", false),
+            Shot::Error => ("截图失败", false),
+            Shot::Busy => ("磁盘忙", false),
         };
         self.toast(now, txt, ok);
         self.beep(now, if ok { 100 } else { 500 });
@@ -4140,12 +4144,12 @@ impl App {
                         // A running recording keeps its settings.
                         if crate::csvlog::active() {
                             self.beep(now, 300);
-                            self.toast(now, "Stop the recording first", false);
+                            self.toast(now, "请先停止记录", false);
                             return;
                         }
                         if crate::fastlog::active() {
                             self.beep(now, 300);
-                            self.toast(now, "Stop the recording first", false);
+                            self.toast(now, "请先停止记录", false);
                             return;
                         }
                         let (_, mut di) = crate::csvlog::next();
@@ -4271,7 +4275,7 @@ impl App {
                             // The row's new value first: a toast holds the
                             // page's repaint until it ends.
                             self.draw_static();
-                            self.toast(clk.now_ms(), "Re-plug USB to apply", true);
+                            self.toast(clk.now_ms(), "请重插 USB 生效", true);
                         }
                     }
                     ui::S_BURDEN => {

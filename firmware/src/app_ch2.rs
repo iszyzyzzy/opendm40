@@ -203,7 +203,7 @@ impl App {
                 self.scope.refresh();
                 self.sp_settings_changed();
             }
-            None => self.toast(now, if up { "Highest V/div" } else { "Lowest V/div" }, false),
+            None => self.toast(now, if up { "最高 V/div" } else { "最低 V/div" }, false),
         }
     }
 

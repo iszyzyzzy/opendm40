@@ -2598,5 +2598,6 @@ mod fatdir;
 mod setfile;
 mod upload;
 mod native;
+mod bootimage;
 mod uid;
 mod shim;

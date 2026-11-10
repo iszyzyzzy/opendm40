@@ -201,7 +201,7 @@ impl App {
             }
         }
         if self.dmm.pw_over_expired() {
-            self.toast(now, "Current too high: reduce it", false);
+            self.toast(now, "电流过大, 请降低", false);
             self.alert_beep_t0 = Some(now);
         }
         if self.alert_beep_t0.is_some() && self.dmm.pw_state().over != 2 {
@@ -655,7 +655,7 @@ impl App {
 fn job_text(r: u8) -> &'static str {
     match r {
         pw::JR_RUN => "RUN",
-        pw::JR_OK => "OK",
+        pw::JR_OK => "确定",
         pw::JR_SIGNAL => "SIGNAL",
         pw::JR_SMALL => "SMALL",
         pw::JR_BIG => "BIG",

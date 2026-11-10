@@ -31,6 +31,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def tool(name):
+    if os.name == 'nt':
+        name += '.exe'
     # build.sh's toolchain (DM40_LLVMBIN), else the repo's toolchain/, else
     # the active rustc's sysroot (llvm-tools component).
     pats = [os.path.join(HERE, '../../../toolchain/rustup/toolchains/*/lib/rustlib/*/bin/' + name)]
@@ -117,6 +119,8 @@ EXC_FRAME = 26 * 4 + 4
 # `respond_with` calls the reply builder, a `run` closure, through
 # `&mut dyn FnMut` (Bt's has a 6 KiB stack buffer, main.rs MMEM / LOG:DATA).
 INDIRECT = [
+    # 开机图片从暂存磁盘读取，Source 回调的扇区缓冲也计入栈深度。
+    (r'^opendm40::calbackup::(run_inner|walk)$', r' as opendm40::calbackup::Source>::try_fill$'),
     (r'^opendm40::run$', r' as opendm40::bt::ScpiPort>::'),
     (r' as opendm40::bt::ScpiPort>::respond_with$', r'^opendm40::run::\{closure#\d+\}$'),
     # stockfont::paint hands its pixel closure to paint_dyn as &mut dyn FnMut

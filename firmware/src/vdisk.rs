@@ -69,6 +69,7 @@
 //! host holds the volume (`vwrite::frozen`) `refresh` waits: the layout
 //! changes only by the host's own writes (tomb flags `T_*` in the table,
 //! vwrite.rs records) until the session ends.
+//! BOOT.RAW 也可从根目录导入；内容持久化到 SPI 磁盘，重连后导入项消失。
 //!
 //! RAM: the file table (MAX_VF x 16 bytes) and the built-in table in SRAM
 //! (.sram_bss / .dmabuf), the CSV / BMP read cursors in .bss.

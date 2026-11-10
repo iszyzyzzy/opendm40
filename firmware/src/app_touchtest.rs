@@ -374,7 +374,7 @@ impl App {
                 Some(_) => {
                     touch::set_cal(touchcal::IDENTITY);
                     s.mode = M_TEST;
-                    self.toast(clk.now_ms(), "Touch calibration reset", true);
+                    self.toast(clk.now_ms(), "触摸校准已复位", true);
                     self.redraw = true;
                     return;
                 }
@@ -440,7 +440,7 @@ impl App {
                 Some(f) if f.bad.is_none() => {
                     touch::set_cal(f.cal);
                     s.mode = M_TEST;
-                    self.toast(clk.now_ms(), "Touch calibration saved", true);
+                    self.toast(clk.now_ms(), "触摸校准已保存", true);
                 }
                 _ => {
                     s.mode = M_WALK;

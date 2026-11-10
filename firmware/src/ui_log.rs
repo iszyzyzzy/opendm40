@@ -233,7 +233,7 @@ pub fn row(i: usize, r: Option<&Row>) {
         }
         let g = COL_S.0 - e;
         lcd::fill_rect(e as u16, y as u16, g as u16, ROW_H as u16, C_FILL);
-        let c = if r.status == "OK" { C_OK } else { C_BAD };
+        let c = if r.status == "确定" { C_OK } else { C_BAD };
         sf::label(sf::SC_F12, rect(COL_S.0, y, COL_S.1, ROW_H), r.status, c, C_FILL, 8, 0);
         let e = COL_S.0 + COL_S.1;
         lcd::fill_rect(e as u16, y as u16, (413 - e) as u16, ROW_H as u16, C_FILL);
@@ -390,7 +390,7 @@ pub fn setup(v: &dec::SetupVals) {
     let r = rect(14, 21, 399, 40);
     fill_c(rect(14, 21, 399, 38), screen, C_POP_BG);
     fill_c(rect(14, 59, 399, 2), screen, C_POP_TAB);
-    let t = Ink::new(sf::SC_F16, r, "Decode", 8, 0);
+    let t = Ink::new(sf::SC_F16, r, "解码", 8, 0);
     paint(isect(t.bx, r), &[(K_TEXT, C_POP_BG)], |x, y| match t.at(x, y) {
         Some(g) => (C_FILL, tag(1, g)),
         None => (C_POP_BG, 0),

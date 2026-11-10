@@ -73,6 +73,9 @@
 //! Host test: tools/fatren-test/run.sh "vwrite" (Linux sequences captured
 //! over USB/IP, mtools-made sector diffs, fsck after each scenario, power
 //! cuts in the staging).
+//!
+//! BOOT.RAW 复用上传暂存区。文件完整后以写新链、切换目录项的方式替换
+//! 内部开机图，只有固件文件才弹出安装确认。单字节 0 表示恢复默认画面。
 
 use crate::dlog::{self, Raw as _};
 use crate::msc::BlockDevice;
@@ -205,6 +208,7 @@ struct W {
     hint: u32,
     err: u8,
     fw: Fw,
+    boot_result: Option<bool>,
     /// The last candidate decided (slot, start, size, `ver`): not tried
     /// again until new data arrives.
     done: (u16, u16, u32, u32),
@@ -239,6 +243,7 @@ static mut W0: W = W {
     hint: 0,
     err: 0,
     fw: Fw::None,
+    boot_result: None,
     done: (0, 0, 0, 0),
     ver: 0,
     end_at: 0,
@@ -384,6 +389,7 @@ pub fn staged_read(c: u32, s: u32, b: &mut [u8]) -> bool {
         let ok = dlog::geometry(&mut d).is_some_and(|g| d.read_at(g.data + (sc as u32 - 2) * g.cb + (s % SPB) * BS as u32, b));
         if !ok {
             b.fill(0);
+            return false;
         }
     }
     true
@@ -577,6 +583,10 @@ fn update_name(e: &[u8]) -> bool {
     e[..4].eq_ignore_ascii_case(b"DM40") && e[8..11].eq_ignore_ascii_case(b"BIN")
 }
 
+fn boot_name(e: &[u8]) -> bool {
+    e[..11].eq_ignore_ascii_case(&crate::bootimage::NAME)
+}
+
 /// A cluster the host may own: free in the model, freed or taken by it.
 fn host_cluster(c: u32) -> bool {
     match vdisk::owner(c) {
@@ -682,7 +692,8 @@ fn rec_ok(idx: usize, d: &[u8], base: usize) -> bool {
     }
     let mut nm = [0u8; 32];
     let n = long_name(idx, d, base, &mut nm);
-    housekeeping(&nm[..n]) || (h[11] & 0x10 == 0 && update_name(h) && le32o(h, 0x1C) <= crate::upload::MAX)
+    housekeeping(&nm[..n])
+        || (h[11] & 0x10 == 0 && (update_name(h) || boot_name(h)) && le32o(h, 0x1C) <= crate::upload::MAX)
 }
 
 fn root(s: u32, d: &[u8], g: &[u8]) -> R {
@@ -973,16 +984,21 @@ pub fn poll(now: u64, blocked: bool) {
         for k in 0..NREC {
             let r = w.rec[k];
             let e = &r.e;
-            if r.slot == 0 || e[0] == 0xE5 || e[11] & 0x3F == 0x0F || e[11] & 0x18 != 0 || !update_name(e) {
+            if r.slot == 0 || e[0] == 0xE5 || e[11] & 0x3F == 0x0F || e[11] & 0x18 != 0 || !(update_name(e) || boot_name(e)) {
                 continue;
             }
             let (start, size) = (le16o(e, 0x1A), le32o(e, 0x1C));
-            if start == 0 || size < 128 || (r.slot, start, size, w.ver) == w.done {
+            if start == 0 || size < if boot_name(e) { 1 } else { 128 } || (r.slot, start, size, w.ver) == w.done {
                 continue;
             }
             let Some((chain, n)) = complete(start as u32, size) else { continue };
             w.done = (r.slot, start, size, w.ver);
-            finalize(dev, &chain[..n], size);
+            if boot_name(e) {
+                let ok = save_boot(dev, &chain[..n], size);
+                w.boot_result = Some(ok);
+            } else {
+                finalize(dev, &chain[..n], size);
+            }
             return;
         }
     }
@@ -1128,6 +1144,56 @@ fn complete(start: u32, size: u32) -> Option<([u8; NST], usize)> {
         }
     }
     Some((chain, n))
+}
+
+/// 暂存簇先占入 FAT，防止图片写入时被当作空闲簇再次分配。
+#[inline(never)]
+fn save_boot(dev: &mut dyn BlockDevice, chain: &[u8], size: u32) -> bool {
+    use crate::calbackup::{Source, Status};
+    struct Image<'a> {
+        chain: &'a [u8],
+        size: u32,
+    }
+    impl Source for Image<'_> {
+        fn size(&self) -> u32 { self.size }
+        fn fill(&self, off: u32, buf: &mut [u8]) {
+            self.try_fill(off, buf);
+        }
+        fn try_fill(&self, mut off: u32, mut buf: &mut [u8]) -> bool {
+            let mut sector = [0u8; BS];
+            while !buf.is_empty() {
+                let c = w().st[self.chain[(off / CB) as usize] as usize].c as u32;
+                if !staged_read(c, (off % CB) / BS as u32, &mut sector) {
+                    return false;
+                }
+                let begin = off as usize % BS;
+                let n = buf.len().min(BS - begin);
+                buf[..n].copy_from_slice(&sector[begin..begin + n]);
+                off += n as u32;
+                buf = &mut buf[n..];
+            }
+            true
+        }
+    }
+    if size != crate::bootimage::SIZE && size != 1 {
+        return false;
+    }
+    let src = Image { chain, size };
+    if size == 1 {
+        let mut reset = [1];
+        if !src.try_fill(0, &mut reset) || reset[0] != 0 {
+            return false;
+        }
+    }
+    if !park(dev) {
+        return false;
+    }
+    let result = crate::calbackup::write_file(dev, crate::bootimage::NAME, &src);
+    matches!(result.status, Status::Present | Status::Written) && result.conflict == 0
+}
+
+pub fn take_boot_result() -> Option<bool> {
+    w().boot_result.take()
 }
 
 /// Decode one 128-byte block of an update file in place (the inverse of
@@ -1365,9 +1431,9 @@ fn fw_unchecked(w: &W) -> bool {
                 && e[0] != 0xE5
                 && e[11] & 0x3F != 0x0F
                 && e[11] & 0x18 == 0
-                && update_name(e)
+                && (update_name(e) || boot_name(e))
                 && le16o(e, 0x1A) != 0
-                && le32o(e, 0x1C) >= 128
+                && le32o(e, 0x1C) >= if boot_name(e) { 1 } else { 128 }
                 && (r.slot, le16o(e, 0x1A), le32o(e, 0x1C), w.ver) != w.done
         })
 }

@@ -13,6 +13,7 @@
 # the non-default feature sets this way, so a test
 # build never replaces the image reload.sh installs).
 set -e
+export PYTHONUTF8=1
 cd "$(dirname "$0")"
 # Toolchain: the repo's pinned one in ../toolchain (README "Toolchain") when
 # it is there; else (CI, a checkout without it) the rustup install that
@@ -77,7 +78,7 @@ done
 # panic handler and no panic formatting code (~19 KB of regions B + C). The
 # magenta bar of main.rs `panic` is not drawn in this build.
 RUSTC_BOOTSTRAP=1 \
-RUSTFLAGS="-Zlocation-detail=none -Zunstable-options -Cpanic=immediate-abort -C link-arg=-T$SCRIPT -C target-cpu=cortex-m4$REMAP" CARGO_TARGET_DIR=$TDIR \
+RUSTFLAGS="-Zlocation-detail=none -Zunstable-options -Cpanic=immediate-abort -C link-arg=-T$SCRIPT -C link-arg=-Map=$TDIR/opendm40.map -C target-cpu=cortex-m4$REMAP" CARGO_TARGET_DIR=$TDIR \
     cargo build --release -Zbuild-std=core "$@"
 ELF=$TDIR/thumbv7em-none-eabihf/release/opendm40
 

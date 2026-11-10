@@ -38,6 +38,7 @@ mod data {
     pub const BIT1: u8 = 0;
     pub const RAW4: u8 = 1;
     pub const HUF: u8 = 2;
+    const CJK: u8 = 3;
 
     /// Token kinds (symbol >> 4).
     const K_L: u8 = 0;
@@ -177,6 +178,31 @@ mod data {
             Glyph { blob: b, fmt: if four { RAW4 } else { BIT1 }, w, h, adv, yoff, t: 0, ih: h }
         }
 
+        /// 共用一份字形，按现有控件字号缩放，避免每种字号各占一份闪存。
+        pub fn cjk(b: &'static [u8], font: Font) -> Glyph {
+            let h = font.line_h().saturating_sub(2).clamp(10, 16) as u8;
+            let yoff = ((font.line_h() as i16 - h as i16) / 2 - font.descent()) as i8;
+            Glyph { blob: b, fmt: CJK, w: h, h, adv: h + 1, yoff, t: 0, ih: h }
+        }
+
+        #[cfg_attr(target_os = "none", link_section = ".text.a2.cjk")]
+        fn cjk_row(&self, y: u32) -> u16 {
+            let mut off = 0;
+            let mut row = 0;
+            for _ in 0..=y * 16 / self.h as u32 {
+                let a = self.blob[off];
+                off += 1;
+                row = if a < 128 {
+                    super::CJK_ROWS[a as usize]
+                } else {
+                    let b = self.blob[off];
+                    off += 1;
+                    ((a as u16 & 127) << 8) | b as u16
+                };
+            }
+            row
+        }
+
         /// Coverage 0..15 of pixel (x, y) inside the glyph box, random access
         /// (Ink::at, the scope markers: 1 bpp fonts). A HUF glyph decodes
         /// its rows up to y (slow; the drawing paths use `row`).
@@ -194,6 +220,7 @@ mod data {
                     }
                 }
                 RAW4 => self.nib(x * self.h as u32 + y),
+                CJK => if self.cjk_row(y) & (1 << (14 - x * 15 / self.w as u32)) != 0 { 15 } else { 0 },
                 _ => {
                     if x >= self.w as u32 || y >= self.h as u32 {
                         return 0;
@@ -265,8 +292,14 @@ mod data {
                     let h = self.h as u32;
                     let mut p = y;
                     for v in buf[..w].iter_mut() {
-                        *v = self.nib(p);
+                        *v = self.at(p);
                         p += h;
+                    }
+                }
+                CJK => {
+                    let bits = self.cjk_row(y);
+                    for (x, v) in buf[..w].iter_mut().enumerate() {
+                        *v = if bits & (1 << (14 - x * 15 / w)) != 0 { 15 } else { 0 };
                     }
                 }
                 _ => {
@@ -285,6 +318,13 @@ mod data {
         #[inline(always)]
         pub fn row_runs<F: FnMut(u8, u16)>(&self, c: &mut Cur, y: u32, x0: usize, x1: usize, mut f: F) {
             let w = (self.w as usize).min(MAXW);
+            if self.fmt == CJK {
+                let bits = self.cjk_row(y);
+                for x in x0..x1 {
+                    f(if bits & (1 << (14 - x * 15 / w)) != 0 { 15 } else { 0 }, 1);
+                }
+                return;
+            }
             let (mut p, lit) = self.seek(c, y, w);
             let mut x = 0usize;
             let mut ctx = 0usize;
@@ -501,6 +541,7 @@ pub fn has_all(font: Font, s: &str) -> bool {
 include!("stockfont_w.rs");
 // The USB symbol for the status bar (tools/mkusbglyph.py).
 include!("stockfont_usb.rs");
+include!("stockfont_cjk.rs");
 
 /// Hand-drawn 1 bpp glyphs, column-major, MSB first. SC_F12 (the scope bar's
 /// 12 px font has ASCII only): Ω and ° for the REC mark's function
@@ -522,6 +563,13 @@ static HAND_GLYPHS: [(u32, char, bool, u8, u8, u8, i8, &[u8]); 3] = [
 /// without a W two of its 'V' overlapped, the second `twin` px to the right.
 /// Returns (glyph, twin).
 fn glyph_or_twin(font: Font, ch: char) -> Option<(Glyph, i16)> {
+    if ch >= '\u{3000}' {
+        if let Ok(i) = CJK_CODES.binary_search(&(ch as u16)) {
+            let off = CJK_OFFSETS[i] as usize;
+            let bits = if off < CJK_SPLIT { &CJK_BITS[off..] } else { &CJK_TAIL[off - CJK_SPLIT..] };
+            return Some((Glyph::cjk(bits, font), 0));
+        }
+    }
     if let Some(g) = font.glyph(ch as u32) {
         return Some((g, 0));
     }

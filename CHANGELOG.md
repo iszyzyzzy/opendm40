@@ -7,6 +7,11 @@ section named after the tag as the release notes; how to cut a release:
 
 ## Unreleased
 
+## v0.5.0-zh1 (2026-11-11)
+
+- Chinese interface based on v0.4.1, using translations from OpenDM40-Chinese and a compact Chinese font.
+- Import `BOOT.RAW` through the writable USB disk to replace the boot screen; the built-in screen remains the default. `firmware/tools/boot-image.py` converts images and creates the restore-default file.
+
 ## v0.4.1 (2026-11-06)
 
 A bug-fix release: an update or a restart from the scope or generator page

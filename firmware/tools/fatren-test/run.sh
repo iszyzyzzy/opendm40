@@ -1493,4 +1493,5 @@ echo "=== vwrite: host writes on the USB volume (delete from the PC, drag-and-dr
 # sequences in captures/ (usbip_msc.py --capture; vreplay.py).
 CAPS=$(ls captures/*.vcap.gz 2>/dev/null || true)
 python3 -I vwrite_test.py "$W/t" $W/f1m_native $W/f1m_none $W/src $VS $NATIVE $W/a.bin $W/vw $CAPS || { echo "FAIL: vwrite"; exit 1; }
+python3 boot_image_test.py "$W/t" "$W/boot-images"
 echo PASS

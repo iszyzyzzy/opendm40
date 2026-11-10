@@ -600,11 +600,11 @@ pub fn entry_anim(ph: u32) {
 pub fn entry_dialog(i_cont: f32, t_lim: u16) {
     let (x, y, w, h) = DLG;
     lcd::fill_rect(x as u16, y as u16, w as u16, 34, DLG_TITLE);
-    sf::glyphs(sf::TEXT22, rect(x, y, w, 34), "Power meter: wiring", STATUS_FG, DLG_TITLE, 8, 0);
+    sf::glyphs(sf::TEXT22, rect(x, y, w, 34), "功率计接线", STATUS_FG, DLG_TITLE, 8, 0);
     lcd::fill_rect(x as u16, (y + 34) as u16, w as u16, (h - 34) as u16, DLG_BODY);
     // Source and load: rounded boxes with + / - terminals (wires at the
     // top / bottom edge centre).
-    for (bx, name) in [(SRC_X + 1 - 40, "SOURCE"), (LOAD_X + 1 - 40, "LOAD")] {
+    for (bx, name) in [(SRC_X + 1 - 40, "电源"), (LOAD_X + 1 - 40, "负载")] {
         sf::rbox(rect(bx, BOX_Y, 80, BOX_H), 8, BTN, DLG_BODY);
         sf::glyphs(sf::F14, rect(bx, BOX_Y + 1, 80, 16), "+", STATUS_FG, BTN, 8, 1);
         sf::glyphs(sf::F14, rect(bx, BOX_Y + BOX_H / 2 - 8, 80, 16), name, STATUS_FG, BTN, 8, 1);
@@ -624,7 +624,7 @@ pub fn entry_dialog(i_cont: f32, t_lim: u16) {
     lcd::fill_rect(TAP_X as u16, WIRE_P as u16, (SRC_X - TAP_X) as u16, 2, WIRE);
     // The shunt between A and COM (the internal wire's gap), named by it.
     outline(SHUNT, 2, WIRE);
-    sf::label(sf::F14, rect(SHUNT.x + SHUNT.w + 4, SHUNT.y + 7, 44, 14), "shunt", DIM, DLG_BODY, 0, 1);
+    sf::label(sf::F14, rect(SHUNT.x + SHUNT.w + 4, SHUNT.y + 7, 44, 14), "分流器", DIM, DLG_BODY, 0, 1);
     // The load current's name by the arrow on the wire down from the load.
     sf::label(sf::F14, rect(LOAD_X + 10, 140, 14, 14), "I", STATUS_FG, DLG_BODY, 8, 1);
     // The current path: marching dashes (moved by `entry_anim` while the
@@ -634,16 +634,16 @@ pub fn entry_dialog(i_cont: f32, t_lim: u16) {
     // Notes: what COM carries, the sign, the rating.
     let mut t = T::new();
     let mut b = [0u8; 16];
-    t.push("Max 10 A; above ").push(sig_text(&mut b, i_cont, 2)).push(" A: ");
+    t.push("最大10A；超过").push(sig_text(&mut b, i_cont, 2)).push("A：");
     let mut b2 = [0u8; 16];
     if t_lim > 0 {
-        t.push(crate::dmm::format(&mut b2, t_lim as f32, 0)).push(" s");
+        t.push(crate::dmm::format(&mut b2, t_lim as f32, 0)).push("s");
     } else {
-        t.push("no limit");
+        t.push("不限时");
     }
-    sf::label(sf::F14, rect(x + 16, 222, w - 32, 14), "COM carries the load current; P > 0: I into A", STATUS_FG, DLG_BODY, 8, 1);
+    sf::label(sf::F14, rect(x + 16, 222, w - 32, 14), "COM流过负载电流；P>0：电流流入A", STATUS_FG, DLG_BODY, 8, 1);
     sf::label(sf::F14, rect(x + 16, 240, w - 32, 14), t.s(), VALUE, DLG_BODY, 8, 1);
-    for (r, l, c) in [(DLG_CANCEL, "Cancel", BTN), (DLG_OK, "OK", SEL)] {
+    for (r, l, c) in [(DLG_CANCEL, "取消", BTN), (DLG_OK, "确定", SEL)] {
         sf::rbox(r, 6, c, DLG_BODY);
         sf::glyphs(sf::TEXT22, r, l, STATUS_FG, c, 8, 0);
     }
@@ -689,7 +689,7 @@ pub const PS_RECORD: u8 = 32;
 /// The bottom row, left to right: Reset Wh, Wiring, Limits, Record, OK
 /// (8..472, 6 px gaps; Reset Wh, 87 px of text, the widest button).
 const PS_ROW5: [(u8, &str); 5] =
-    [(PS_RESET, "Reset Wh"), (PS_WIRING, "Wiring"), (PS_LIMITS, "Limits"), (PS_RECORD, "Record"), (PS_OK, "OK")];
+    [(PS_RESET, "复位电能"), (PS_WIRING, "接线"), (PS_LIMITS, "限值"), (PS_RECORD, "记录"), (PS_OK, "确定")];
 const PS_ROW5_X: [i16; 6] = [8, 114, 206, 298, 390, 478];
 
 fn ps_row5(i: usize) -> sf::Rect {
@@ -719,7 +719,7 @@ fn ps_button(r: sf::Rect, t: &str, sel: bool) {
 pub fn settings_page(pv: &PowerVals) {
     lcd::fill_rect(0, 0, lcd::W, 40, 0x2966);
     lcd::fill_rect(0, 40, lcd::W, lcd::H - 40, BG);
-    sf::glyphs(sf::TEXT22, rect(0, 0, 480, 40), "Power Settings", STATUS_FG, 0x2966, 8, 0);
+    sf::glyphs(sf::TEXT22, rect(0, 0, 480, 40), "功率设置", STATUS_FG, 0x2966, 8, 0);
     sf::label(sf::TEXT22, rect(8, 46, 32, 38), "V", STATUS_FG, BG, 8, 0);
     sf::label(sf::TEXT22, rect(8, 90, 32, 38), "A", STATUS_FG, BG, 8, 0);
     for (i, n) in pw::V_NAMES.iter().enumerate() {
@@ -732,9 +732,9 @@ pub fn settings_page(pv: &PowerVals) {
     ps_button(ps_cell(2, 1), "AUTO", pv.i_auto);
     // Burden compensation (selected = on), self-zero, V self-calibration
     // (doc 3.12); the status line under the last row (`settings_status`).
-    ps_button(ps_cell(2, 2), "At load", pv.comp);
-    ps_button(ps_cell(2, 3), "Zero", false);
-    ps_button(ps_cell(2, 4), "V cal", false);
+    ps_button(ps_cell(2, 2), "带载", pv.comp);
+    ps_button(ps_cell(2, 3), "归零", false);
+    ps_button(ps_cell(2, 4), "电压校准", false);
     for (i, c) in PS_COUPS.iter().enumerate() {
         ps_button(rect(PS_ROW4[i], 182, 150, 38), pw::coup_name(*c), pv.coup == *c);
     }
@@ -775,9 +775,9 @@ fn press_item(pv: &PowerVals, c: u8) -> Option<(sf::Rect, Option<(&'static str, 
             (ps_cell((1 + i / 5) as i16, (i % 5) as i16), pw::I_NAMES[i as usize], !pv.i_auto && pv.ik == i)
         }
         14 => (ps_cell(2, 1), "AUTO", pv.i_auto),
-        PS_BURDEN => (ps_cell(2, 2), "At load", pv.comp),
-        PS_ZERO => (ps_cell(2, 3), "Zero", false),
-        PS_VCAL => (ps_cell(2, 4), "V cal", false),
+        PS_BURDEN => (ps_cell(2, 2), "带载", pv.comp),
+        PS_ZERO => (ps_cell(2, 3), "归零", false),
+        PS_VCAL => (ps_cell(2, 4), "电压校准", false),
         PS_COUP..=30 => {
             let i = (c - PS_COUP) as usize;
             (rect(PS_ROW4[i], 182, 150, 38), pw::coup_name(PS_COUPS[i]), pv.coup == PS_COUPS[i])
@@ -795,11 +795,11 @@ fn press_item(pv: &PowerVals, c: u8) -> Option<(sf::Rect, Option<(&'static str, 
 /// lines of <= 30 characters).
 pub fn job_dialog(job: u8) {
     let (title, l1, l2) = if job == pw::JOB_ZERO {
-        ("Zero the power meter", "Leads open, nothing in A", "Takes about 12 s")
+        ("功率计归零", "断开表笔，A 插孔悬空", "约需 12 秒")
     } else {
-        ("V cal of this V range", "Steady V, 10-70 % of range", "Gain vs DC V / AC V, 8 s")
+        ("校准当前电压档", "稳定电压，量程的 10-70 %", "对照电压档校准，约 8 秒")
     };
-    crate::dialog::fuse_check(title, crate::dialog::TITLE_BG, l1, l2, Some("Cancel"), Some("Start"));
+    crate::dialog::fuse_check(title, crate::dialog::TITLE_BG, l1, l2, Some("取消"), Some("开始"));
 }
 
 /// Settings page hit (PS_* codes).
@@ -849,61 +849,61 @@ pub fn settings_status(p: &pw::Pw, key: u32, help: u8) -> u32 {
     let res = if p.job != 0 { pw::JR_RUN } else { p.job_res };
     let warn = match (p.job_last, res) {
         (pw::JOB_ZERO, pw::JR_RUN) => {
-            t.push("Zero: leads open (12 s)");
+            t.push("归零：断开表笔（12秒）");
             false
         }
         (pw::JOB_VCAL, pw::JR_RUN) => {
-            t.push("V cal ").push(rn).push(": hold V steady (8 s)");
+            t.push("电压校准").push(rn).push("：保持电压稳定（8秒）");
             false
         }
         (_, pw::JR_METHOD) => {
-            t.push("Needs the P + PF method");
+            t.push("请使用P+PF方法");
             true
         }
         (pw::JOB_ZERO, pw::JR_OK) => {
-            t.push("Zero stored");
+            t.push("归零已保存");
             false
         }
         (pw::JOB_ZERO, pw::JR_SIGNAL) => {
-            t.push("Zero: signal present");
+            t.push("归零失败：存在信号");
             true
         }
         (pw::JOB_VCAL, pw::JR_OK) => {
-            t.push("V cal ").push(rn).push(": gain ").push(crate::dmm::format(&mut b, p.v_gain(vr as u8), 5)).push(" stored");
+            t.push("电压校准").push(rn).push("：增益").push(crate::dmm::format(&mut b, p.v_gain(vr as u8), 5)).push("已保存");
             false
         }
         (pw::JOB_VCAL, pw::JR_SMALL) => {
-            t.push("V cal: < 10 % of ").push(rn);
+            t.push("校准：电压低于量程的10%，").push(rn);
             true
         }
         (pw::JOB_VCAL, pw::JR_BIG) => {
-            t.push("V cal: too high for ").push(rn);
+            t.push("校准：电压过高，").push(rn);
             true
         }
         (pw::JOB_VCAL, pw::JR_UNSTABLE) => {
-            t.push("V cal: V not steady");
+            t.push("校准：电压不稳定");
             true
         }
         (pw::JOB_VCAL, pw::JR_RANGE) => {
-            t.push("V cal: off > 10 %");
+            t.push("校准：偏差超过10%");
             true
         }
         (_, pw::JR_ABORT) => {
-            t.push("Aborted");
+            t.push("已中止");
             true
         }
         _ => {
             // "V gain 6 V: 1.0207 factory, zero: not set"
-            t.push("V gain ")
+            t.push("电压增益")
                 .push(rn.trim_end_matches('V'))
-                .push(" V: ")
+                .push("V：")
                 .push(crate::dmm::format(&mut b, p.v_gain(vr as u8), 4))
-                .push(if p.vgain[vr] > 0.0 { " V cal" } else { " factory" })
+                .push(if p.vgain[vr] > 0.0 { "已校准" } else { "原厂" })
                 .push(match (p.alt, p.zero_ok) {
                     // The VA-only fallback (SCPI): no room for the zero.
-                    (true, _) => ", VA only",
-                    (false, true) => ", zero: set",
-                    (false, false) => ", zero: not set",
+                    (true, _) => "，仅VA",
+                    (false, true) => "，已归零",
+                    (false, false) => "，未归零",
                 });
             false
         }

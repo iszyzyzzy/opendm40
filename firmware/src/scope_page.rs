@@ -950,11 +950,11 @@ impl App {
     pub(super) fn sp_save_csv(&mut self, now: u64) {
         let rec = self.scope.record();
         if self.scope.s.run || rec.is_empty() {
-            self.toast(now, if self.scope.s.run { "Stop the scope first" } else { "No record to save" }, false);
+            self.toast(now, if self.scope.s.run { "请先停止示波器" } else { "无波形可保存" }, false);
             return;
         }
         if crate::screenshot::busy() || crate::csvlog::writing() {
-            self.toast(now, "Disk busy, try again", false);
+            self.toast(now, "磁盘忙, 请重试", false);
             return;
         }
         // The record's own settings (a stopped change only re-renders it);
@@ -993,9 +993,9 @@ impl App {
         self.sp_trig_desc(&mut h, &s, runt_v);
         h.s(" ").s(if s.rising { crate::cold_str!("rising") } else { crate::cold_str!("falling") }).s(" ").s(tv.as_str());
         h.s(crate::cold_str!(", mode ")).s(match s.mode {
-            scope::TrigMode::Auto => crate::cold_str!("Auto"),
-            scope::TrigMode::Normal => crate::cold_str!("Normal"),
-            scope::TrigMode::Single => crate::cold_str!("Single"),
+            scope::TrigMode::Auto => crate::cold_str!("自动"),
+            scope::TrigMode::Normal => crate::cold_str!("正常"),
+            scope::TrigMode::Single => crate::cold_str!("单次"),
         });
         h.s(if trig { crate::cold_str!(", triggered\r\n") } else { crate::cold_str!(", untriggered\r\n") });
         h.s(if wave {
@@ -1009,11 +1009,11 @@ impl App {
         });
         crate::scope_csv::set(rec, a, b, fs as f32, t0, &h, amps);
         if !crate::screenshot::start_csv() {
-            self.toast(now, "CSV save failed", false);
+            self.toast(now, "保存失败", false);
             return;
         }
         self.scope.hold = true;
-        self.toast(now, "Saving CSV...", true);
+        self.toast(now, "正在保存...", true);
     }
 
     /// Trigger type text of the CSV header.
@@ -1048,9 +1048,9 @@ impl App {
                 t[12] = b'0' + (n % 10) as u8;
                 (core::str::from_utf8(&t).unwrap_or("Save CSV OK"), true)
             }
-            crate::screenshot::Shot::NoDisk => ("No disk", false),
-            crate::screenshot::Shot::Full => ("Disk full", false),
-            crate::screenshot::Shot::Error | crate::screenshot::Shot::Busy => ("CSV save failed", false),
+            crate::screenshot::Shot::NoDisk => ("无磁盘", false),
+            crate::screenshot::Shot::Full => ("磁盘已满", false),
+            crate::screenshot::Shot::Error | crate::screenshot::Shot::Busy => ("保存失败", false),
         };
         self.toast(now, txt, ok);
         self.beep(now, if ok { 100 } else { 500 });
@@ -2014,7 +2014,7 @@ impl App {
     /// without it).
     fn sp_tb_floor_toast(&mut self, want: usize, now: u64) {
         if !self.scope.s.run && self.scope.s.tb > want && self.scope.s.tb == self.scope.tb_floor() {
-            self.toast(now, "Max zoom", false);
+            self.toast(now, "缩放已到极限", false);
         }
     }
 
@@ -2026,7 +2026,7 @@ impl App {
         if tb == st.tb {
             // Stopped at the record's resolution (the faster tab is still shown).
             if !slower && !st.run && lo > if self.scope.wave_on() { scope::WAVE_TB_MIN } else { scope::TB_MIN } {
-                self.toast(now, "Max zoom", false);
+                self.toast(now, "缩放已到极限", false);
             }
             return false;
         }
@@ -2233,7 +2233,7 @@ impl App {
         let i = self.gen_vdiv_idx();
         let j = if zin { i.saturating_sub(1) } else { (i + 1).min(su::VDIV_VAL.len() as u8 - 1) };
         if j == i {
-            self.toast(now, if zin { "Lowest V/div" } else { "Highest V/div" }, false);
+            self.toast(now, if zin { "最低 V/div" } else { "最高 V/div" }, false);
             return;
         }
         self.gen_vdiv_set(j);
@@ -2261,7 +2261,7 @@ impl App {
     fn sp_key(&mut self, clk: &mut Clock, code: u8) {
         let now = clk.now_ms();
         if self.scope.hold && (code == 1 || code == 2) {
-            self.toast(now, "Saving CSV, wait", false);
+            self.toast(now, "正在保存, 请稍候", false);
             return;
         }
         match code {
@@ -2655,7 +2655,7 @@ impl App {
                 st.tsrc = t.min(1);
                 self.scope_set(st, now);
                 if st.tsrc == scope::TSRC_GEN && !self.gen.s.on {
-                    self.toast(now, "Generator is off", false);
+                    self.toast(now, "信号源未开启", false);
                 }
             }
             su::MfHit::Ch2(on) => {
@@ -2881,7 +2881,7 @@ impl App {
             } else {
                 self.sp.autoset = None;
                 self.scope_set(a.saved, now);
-                self.toast(now, "AUTO: no signal found", false);
+                self.toast(now, "自动: 未找到信号", false);
                 return;
             }
             next(self, a, st);

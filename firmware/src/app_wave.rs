@@ -196,7 +196,7 @@ impl App {
             // under the stream). CH2's stream is taken over (main.rs stops
             // it: `ch2_want` is None in the Wave view; it starts again
             // when the view closes, CH2 still on).
-            Some("Wave: data logger running")
+            Some("波形: 记录运行中")
         } else {
             None
         };
@@ -216,7 +216,7 @@ impl App {
         // A fixed range while streaming (the DMM autorange does not run):
         // the current one, restored to AUTO / AUTO+ on exit.
         let Some(a) = self.dmm.ad2_scale() else {
-            self.toast(now, "Wave: no AD2 row here", false);
+            self.toast(now, "波形: 此处无 AD2", false);
             return;
         };
         self.wave_auto = if self.dmm.is_auto() {
@@ -392,7 +392,7 @@ impl App {
         let j = if smaller { i.checked_sub(1) } else { (i + 1 < n).then_some(i + 1) };
         match j {
             Some(j) => self.wave_step_to(j, now),
-            None => self.toast(now, if smaller { "Lowest V/div" } else { "Highest V/div" }, false),
+            None => self.toast(now, if smaller { "最低 V/div" } else { "最高 V/div" }, false),
         }
     }
 
@@ -420,7 +420,7 @@ impl App {
             self.wave_req = Some(WaveReq::Coupling(a.item));
             self.toast(now, if ac { "DC coupling (DC V row)" } else { "AC coupling (AC V row)" }, true);
         } else {
-            self.toast(now, "DC-coupled AC row", true);
+            self.toast(now, "交流档为直流耦合", true);
         }
     }
 

@@ -835,7 +835,7 @@ impl App {
             };
             if l.note != k {
                 l.note = k;
-                let t = ["", "Stopped", "Waiting for a signal (no swing)", "Measuring the bit rate", "No frames yet", "Bit rate too high for 1.25 MS/s"][k as usize];
+                let t = ["", "已停止", "等待信号", "正在测量波特率", "暂无帧", "波特率超出采样能力"][k as usize];
                 ul::row(0, Some(&ul::Row { time: "", text: t, ascii: "", status: "", fg: 0 }));
                 l.shown[0] = 0;
                 for i in 1..ul::ROWS {

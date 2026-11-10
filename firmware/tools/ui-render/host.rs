@@ -254,15 +254,25 @@ pub mod mmio {
     pub fn spin(_: u32) {}
 }
 
+#[cfg(not(windows))]
 extern "C" {
     fn mmap(addr: *mut u8, len: usize, prot: i32, flags: i32, fd: i32, off: i64) -> *mut u8;
+}
+
+#[cfg(windows)]
+#[link(name = "kernel32")]
+extern "system" {
+    fn VirtualAlloc(addr: *mut u8, len: usize, allocation: u32, protect: u32) -> *mut u8;
 }
 
 /// Map 0x08000000..0x08100000 (internal flash) as erased flash.
 pub fn map_flash() {
     unsafe {
         // PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED_NOREPLACE
+        #[cfg(not(windows))]
         let p = mmap(0x0800_0000 as *mut u8, 0x10_0000, 3, 0x02 | 0x20 | 0x10_0000, -1, 0);
+        #[cfg(windows)]
+        let p = VirtualAlloc(0x0800_0000 as *mut u8, 0x10_0000, 0x3000, 0x04);
         assert_eq!(p as usize, 0x0800_0000, "flash mmap failed");
         core::ptr::write_bytes(p, 0xFF, 0x10_0000);
     }

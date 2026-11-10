@@ -1124,10 +1124,10 @@ pub fn set_vals(over: &[(u8, &'static str)]) -> Vec<&'static str> {
     let mut v = vec![""; ui::SET_N];
     for (id, t) in [
         (ui::S_DIM, "5 min"), (ui::S_SHUTDOWN, "30 min"), (ui::S_BACKLIGHT, "55%"), (ui::S_VOLUME, "50%"), (ui::S_BT, "ON"),
-        (ui::S_START, "Multimeter"), (ui::S_RAILS, "Auto (per view)"), (ui::S_RATE, "MED  5.0/s"),
-        (ui::S_SMOOTH, "OFF"), (ui::S_DMM_ROW, "Bargraph"), (ui::S_TEMP_UNIT, "\u{2103} (Celsius)"), (ui::S_SWIPE, "Off (stock)"),
-        (ui::S_PRESS, "ON"), (ui::S_TAP_STEP, "Corners"), (ui::S_JACK, "ON"), (ui::S_ALARM, "Loud"),
-        (ui::S_USB, ui::usb_disk_name(true, true)), (ui::S_BURDEN, "OFF (stock)"), (ui::S_ACC, "ON"), (ui::S_OHM_NEG, "OFF (stock)"),
+        (ui::S_START, "万用表"), (ui::S_RAILS, "自动 (按视图)"), (ui::S_RATE, "中  5.0/s"),
+        (ui::S_SMOOTH, "关"), (ui::S_DMM_ROW, "柱状图"), (ui::S_TEMP_UNIT, "\u{2103} 摄氏"), (ui::S_SWIPE, "关 (原厂)"),
+        (ui::S_PRESS, "ON"), (ui::S_TAP_STEP, "四角"), (ui::S_JACK, "ON"), (ui::S_ALARM, "高"),
+        (ui::S_USB, ui::usb_disk_name(true, true)), (ui::S_BURDEN, "关 (原厂)"), (ui::S_ACC, "ON"), (ui::S_OHM_NEG, "关 (原厂)"),
         (ui::S_REMEMBER, "OFF"),
     ] {
         v[id as usize] = t;
@@ -1142,10 +1142,10 @@ pub fn set_vals(over: &[(u8, &'static str)]) -> Vec<&'static str> {
 fn set_vals_worst() -> Vec<&'static str> {
     set_vals(&[
         (ui::S_DIM, "10 min"), (ui::S_SHUTDOWN, "1 hour"), (ui::S_BACKLIGHT, "100%"), (ui::S_VOLUME, "100%"), (ui::S_BT, "OFF"),
-        (ui::S_START, "DMM + Scope"), (ui::S_RATE, "SLOW (n/a here)"), (ui::S_SMOOTH, "HIGH"),
-        (ui::S_DMM_ROW, "Bargraph"), (ui::S_TEMP_UNIT, "\u{2109} (Fahrenheit)"), (ui::S_PRESS, "OFF (stock)"),
-        (ui::S_TAP_STEP, "Halves (stock)"), (ui::S_JACK, "A-JACK only"), (ui::S_ALARM, "Volume"),
-        (ui::S_USB, ui::usb_disk_name(true, false)), (ui::S_BURDEN, "ON (A, mA, uA)"), (ui::S_OHM_NEG, "OFF (stock)"),
+        (ui::S_START, "表 + 示波器"), (ui::S_RATE, "慢（固定）"), (ui::S_SMOOTH, "高"),
+        (ui::S_DMM_ROW, "柱状图"), (ui::S_TEMP_UNIT, "\u{2109} 华氏"), (ui::S_PRESS, "关 (原厂)"),
+        (ui::S_TAP_STEP, "左右 (原厂)"), (ui::S_JACK, "仅 A 插孔"), (ui::S_ALARM, "音量"),
+        (ui::S_USB, ui::usb_disk_name(true, false)), (ui::S_BURDEN, "开 (A, mA, uA)"), (ui::S_OHM_NEG, "关 (原厂)"),
     ])
 }
 

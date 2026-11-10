@@ -82,7 +82,7 @@ impl App {
     pub(super) fn inrush_btn(&self) -> (&'static str, crate::lcd::Color, bool) {
         let s = inr::ses();
         if s.streaming || s.req == Some(Req::Start) {
-            ("Cancel", 0xF800, true)
+            ("取消", 0xF800, true)
         } else if s.saving() {
             ("Saving ...", ui::BTN, false)
         } else {

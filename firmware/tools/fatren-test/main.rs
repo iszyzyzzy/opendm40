@@ -288,6 +288,8 @@ mod setfile;
 mod vdisk;
 #[path = "../../src/vwrite.rs"]
 mod vwrite;
+#[path = "../../src/bootimage.rs"]
+mod bootimage;
 
 /// Memory map for vdisk's reader: (address, bytes).
 static MEM: std::sync::OnceLock<Vec<(u32, Vec<u8>)>> = std::sync::OnceLock::new();
@@ -578,6 +580,11 @@ fn vserve(a: &[String]) {
                 }
             }
             b'D' => reply[0] = match vwrite::take_dialog() {
+                None => 0,
+                Some(true) => 1,
+                Some(false) => 2,
+            },
+            b'H' => reply[0] = match vwrite::take_boot_result() {
                 None => 0,
                 Some(true) => 1,
                 Some(false) => 2,

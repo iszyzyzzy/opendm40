@@ -22,8 +22,8 @@ const BAR: (i16, i16, i16, i16) = (160, TOP + 114, 160, 8);
 /// `note`'s two lines: named statics, so they are region C data (a string
 /// literal's section has no module path: region B).
 /// At most 48 characters each (stockfont `label`'s MAXG).
-static NOTE1: [u8; 46] = *b"First start after update: copying system files";
-static NOTE2: [u8; 22] = *b"Later starts are fast.";
+static NOTE1: &str = "更新后首次启动，正在复制系统文件";
+static NOTE2: &str = "后续启动无需复制";
 const NOTE_FONT: sf::Font = sf::SC_F16;
 /// `step` calls from the splash to the first frame: pre_main's six
 /// phases, then main's App::new.
@@ -37,12 +37,17 @@ static STEP: AtomicU8 = AtomicU8::new(0);
 /// The splash is up and `note` not drawn yet.
 #[cfg_attr(target_os = "none", link_section = ".sram_bss")]
 static NOTE_DUE: AtomicBool = AtomicBool::new(false);
+static CUSTOM: AtomicBool = AtomicBool::new(false);
 
 /// Draw the splash and light the backlight (at the backup-SRAM record's
 /// level, else the default 55 %; App::new sets the saved level again).
 #[cfg(not(test))]
 pub fn show() {
-    draw();
+    let custom = crate::bootimage::draw();
+    CUSTOM.store(custom, Ordering::Relaxed);
+    if !custom {
+        draw();
+    }
     crate::persist::init();
     // The record's word 1 (App::restore) without the CRC check: a torn
     // record only sets this level until App::new; persist::load would pull
@@ -63,7 +68,7 @@ pub fn draw() {
     b[1..1 + n].copy_from_slice(&v[..n]);
     let ver = core::str::from_utf8(&b[..1 + n]).unwrap_or("");
     sf::label(sf::ASCII26, rect(0, TOP + 32, lcd::W as i16, 30), ver, DIM, BG, 8, 1);
-    sf::label(sf::ASCII26, rect(0, TOP + 74, lcd::W as i16, 30), "Loading...", DIM, BG, 8, 1);
+    sf::label(sf::ASCII26, rect(0, TOP + 74, lcd::W as i16, 30), "正在加载...", DIM, BG, 8, 1);
     let (x, y, w, h) = BAR;
     lcd::fill_rect(x as u16, y as u16, w as u16, h as u16, DIM);
     lcd::fill_rect(x as u16 + 1, y as u16 + 1, w as u16 - 2, h as u16 - 2, BG);
@@ -71,6 +76,9 @@ pub fn draw() {
 
 /// One boot phase done: the bar's next part.
 pub fn step() {
+    if CUSTOM.load(Ordering::Relaxed) {
+        return;
+    }
     let n = (STEP.load(Ordering::Relaxed) + 1).min(STEPS);
     STEP.store(n, Ordering::Relaxed);
     let (x, y, w, h) = BAR;
@@ -85,8 +93,7 @@ pub fn note() {
     if !NOTE_DUE.swap(false, Ordering::Relaxed) {
         return;
     }
-    for (i, t) in [&NOTE1[..], &NOTE2[..]].into_iter().enumerate() {
-        let t = core::str::from_utf8(t).unwrap_or("");
+    for (i, t) in [NOTE1, NOTE2].into_iter().enumerate() {
         sf::label(NOTE_FONT, rect(0, TOP + 140 + 26 * i as i16, lcd::W as i16, 22), t, DIM, BG, 8, 0);
     }
 }

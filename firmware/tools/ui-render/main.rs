@@ -4182,3 +4182,23 @@ fn main() {
     println!("cases {}, violations {}", ck.cases, ck.violations);
     std::process::exit(if ck.violations == 0 { 0 } else { 1 });
 }
+
+#[test]
+fn custom_splash_progress_preserves_picture() {
+    host::reset(0x1234);
+    splash::custom_bar();
+    assert_eq!(host::emu().fb[302 * 480 + 162], ui::BG);
+    splash::step();
+    assert_eq!(host::emu().fb[302 * 480 + 162], ui::SEL);
+    assert_eq!(host::emu().fb[302 * 480 + 317], ui::BG);
+    for _ in 1..splash::STEPS { splash::step(); }
+    assert_eq!(host::emu().fb[302 * 480 + 317], ui::SEL);
+    splash::note();
+    for y in 0..320 {
+        for x in 0..480 {
+            if !(160..320).contains(&x) || !(300..308).contains(&y) {
+                assert_eq!(host::emu().fb[y * 480 + x], 0x1234);
+            }
+        }
+    }
+}

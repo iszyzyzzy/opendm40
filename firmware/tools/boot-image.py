@@ -22,7 +22,10 @@ def main():
         from PIL import Image, ImageOps
 
         with Image.open(args.image) as source:
-            source = ImageOps.exif_transpose(source).convert("RGB")
+            source = ImageOps.exif_transpose(source).convert("RGBA")
+            # RGB565 没有透明通道，先与黑底合成，避免透明像素的隐藏颜色进入缩放边缘。
+            background = Image.new("RGBA", source.size, "black")
+            source = Image.alpha_composite(background, source).convert("RGB")
             image = ImageOps.pad(source, (480, 320), method=Image.Resampling.LANCZOS, color="black")
             data = b"".join(struct.pack("<H", (r >> 3) << 11 | (g >> 2) << 5 | b >> 3) for r, g, b in struct.iter_unpack("BBB", image.tobytes()))
     args.output.write_bytes(data)

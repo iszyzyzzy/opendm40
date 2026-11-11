@@ -44,8 +44,9 @@ static CUSTOM: AtomicBool = AtomicBool::new(false);
 #[cfg(not(test))]
 pub fn show() {
     let custom = crate::bootimage::draw();
-    CUSTOM.store(custom, Ordering::Relaxed);
-    if !custom {
+    if custom {
+        custom_bar();
+    } else {
         draw();
     }
     crate::persist::init();
@@ -58,6 +59,7 @@ pub fn show() {
 
 /// The splash with an empty bar (tools/ui-render draws it too).
 pub fn draw() {
+    CUSTOM.store(false, Ordering::Relaxed);
     NOTE_DUE.store(true, Ordering::Relaxed);
     lcd::fill_rect(0, 0, lcd::W, lcd::H, BG);
     sf::label(sf::ASCII26, rect(0, TOP, lcd::W as i16, 30), "opendm40", FG, BG, 8, 1);
@@ -69,19 +71,32 @@ pub fn draw() {
     let ver = core::str::from_utf8(&b[..1 + n]).unwrap_or("");
     sf::label(sf::ASCII26, rect(0, TOP + 32, lcd::W as i16, 30), ver, DIM, BG, 8, 1);
     sf::label(sf::ASCII26, rect(0, TOP + 74, lcd::W as i16, 30), "正在加载...", DIM, BG, 8, 1);
-    let (x, y, w, h) = BAR;
+    empty_bar();
+}
+
+/// 自定义图保留主体内容，进度条放在屏幕底部。
+pub fn custom_bar() {
+    CUSTOM.store(true, Ordering::Relaxed);
+    NOTE_DUE.store(false, Ordering::Relaxed);
+    empty_bar();
+}
+
+fn bar() -> (i16, i16, i16, i16) {
+    if CUSTOM.load(Ordering::Relaxed) { (160, 300, 160, 8) } else { BAR }
+}
+
+fn empty_bar() {
+    STEP.store(0, Ordering::Relaxed);
+    let (x, y, w, h) = bar();
     lcd::fill_rect(x as u16, y as u16, w as u16, h as u16, DIM);
     lcd::fill_rect(x as u16 + 1, y as u16 + 1, w as u16 - 2, h as u16 - 2, BG);
 }
 
 /// One boot phase done: the bar's next part.
 pub fn step() {
-    if CUSTOM.load(Ordering::Relaxed) {
-        return;
-    }
     let n = (STEP.load(Ordering::Relaxed) + 1).min(STEPS);
     STEP.store(n, Ordering::Relaxed);
-    let (x, y, w, h) = BAR;
+    let (x, y, w, h) = bar();
     let inner = w - 4;
     let fill = inner * n as i16 / STEPS as i16;
     lcd::fill_rect(x as u16 + 2, y as u16 + 2, fill as u16, h as u16 - 4, SEL);

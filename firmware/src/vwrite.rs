@@ -180,6 +180,11 @@ pub struct Stats {
     pub fw_bad: u16,
 }
 
+// .sram_bss 启动时清零，零值必须表示没有待显示的保存结果。
+#[repr(u8)]
+#[derive(Clone, Copy)]
+enum BootResult { Pending = 0, Saved, Failed }
+
 struct W {
     /// The writable volume is in force (false = read-only, the WP bit:
     /// live updates while mounted, no delete / update from the PC). Zero =
@@ -208,7 +213,7 @@ struct W {
     hint: u32,
     err: u8,
     fw: Fw,
-    boot_result: Option<bool>,
+    boot_result: BootResult,
     /// The last candidate decided (slot, start, size, `ver`): not tried
     /// again until new data arrives.
     done: (u16, u16, u32, u32),
@@ -243,7 +248,7 @@ static mut W0: W = W {
     hint: 0,
     err: 0,
     fw: Fw::None,
-    boot_result: None,
+    boot_result: BootResult::Pending,
     done: (0, 0, 0, 0),
     ver: 0,
     end_at: 0,
@@ -995,7 +1000,7 @@ pub fn poll(now: u64, blocked: bool) {
             w.done = (r.slot, start, size, w.ver);
             if boot_name(e) {
                 let ok = save_boot(dev, &chain[..n], size);
-                w.boot_result = Some(ok);
+                w.boot_result = if ok { BootResult::Saved } else { BootResult::Failed };
             } else {
                 finalize(dev, &chain[..n], size);
             }
@@ -1193,7 +1198,11 @@ fn save_boot(dev: &mut dyn BlockDevice, chain: &[u8], size: u32) -> bool {
 }
 
 pub fn take_boot_result() -> Option<bool> {
-    w().boot_result.take()
+    match core::mem::replace(&mut w().boot_result, BootResult::Pending) {
+        BootResult::Pending => None,
+        BootResult::Saved => Some(true),
+        BootResult::Failed => Some(false),
+    }
 }
 
 /// Decode one 128-byte block of an update file in place (the inverse of
@@ -1495,4 +1504,10 @@ pub fn debug_text() -> std::string::String {
     }
     s += &std::format!("done={:?} fw={} staging={}\n", w.done, w.fw as u8, w.staging);
     s
+}
+
+#[test]
+fn zeroed_boot_result_is_pending() {
+    let result: BootResult = unsafe { core::mem::zeroed() };
+    assert!(matches!(result, BootResult::Pending));
 }

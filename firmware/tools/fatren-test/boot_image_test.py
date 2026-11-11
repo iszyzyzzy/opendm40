@@ -84,6 +84,8 @@ def upload(v, data, reverse=False, incomplete=False):
     v.idle(800)
     v._op(b"H")
     result = v._1()
+    v._op(b"H")
+    assert v._1() == 0, "保存结果重复显示"
     assert v.dialog() == 0 and not v.install(), "图片被当作固件处理"
     return result
 
@@ -107,6 +109,8 @@ def main():
     ):
         v = VServe(binary, str(spi), str(flash), str(work))
         try:
+            v._op(b"H")
+            assert v._1() == 0, "开机后出现保存消息"
             v.lock(True)
             v.tick(100)
             assert upload(v, data, reverse) == result, label

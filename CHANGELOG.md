@@ -7,6 +7,12 @@ section named after the tag as the release notes; how to cut a release:
 
 ## Unreleased
 
+## v0.5.0-zh2 (2026-11-11)
+
+- Show loading progress at the bottom of custom boot images.
+- Keep boot image save notifications idle after SRAM initialization.
+- Composite transparent images onto black before resizing and RGB565 conversion.
+
 ## v0.5.0-zh1 (2026-11-11)
 
 - Chinese interface based on v0.4.1, using translations from OpenDM40-Chinese and a compact Chinese font.
